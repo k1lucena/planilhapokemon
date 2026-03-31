@@ -535,7 +535,46 @@ export function useStudentData() {
     setIsLoading(false);
   }, []);
 
-  const clearEvolutionEvent = useCallback(() => setEvolutionEvent(null), []);
+  const shiftEvolutionQueue = useCallback(() => {
+    setEvolutionQueue(prev => prev.slice(1));
+  }, []);
+
+  const evolveStudent = useCallback(async (studentName: string) => {
+    const current = studentsRef.current;
+    const student = current.find(s => s.name === studentName);
+    if (!student) return;
+
+    const currentStage = getStage(student.totalScore);
+    if (currentStage >= 2) {
+      toast.info(`${studentName} já está no estágio máximo!`);
+      return;
+    }
+
+    const targetScore = currentStage === 0 ? 100 : 200;
+    const diff = targetScore - student.totalScore;
+    if (diff <= 0) return;
+
+    // Add score to first task (or create one)
+    let updatedTasks = [...student.tasks];
+    if (updatedTasks.length === 0) {
+      updatedTasks = [{ name: 'Evolução Manual', score: diff }];
+    } else {
+      updatedTasks = updatedTasks.map((t, i) => i === 0 ? { ...t, score: t.score + diff } : t);
+    }
+
+    const updated = recalcTotal({ ...student, tasks: updatedTasks });
+    const { error } = await supabase.from('students').update({
+      tasks: updated.tasks as any,
+      total_score: updated.totalScore,
+    }).eq('name', studentName);
+
+    if (!error) {
+      setStudents(prev => prev.map(s => s.name === studentName ? updated : s));
+      setLastUpdate(new Date());
+      triggerEvolution(studentName, student.pokemon, currentStage, currentStage + 1);
+      toast.success(`${studentName} evoluiu!`);
+    }
+  }, [triggerEvolution]);
 
   return {
     students, isLoading, lastUpdate,
@@ -543,6 +582,6 @@ export function useStudentData() {
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet, resetToMock,
-    evolutionEvent, clearEvolutionEvent,
+    evolutionQueue, shiftEvolutionQueue, evolveStudent, triggerEvolution,
   };
 }
