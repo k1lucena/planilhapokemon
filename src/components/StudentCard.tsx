@@ -16,7 +16,7 @@ const GLOW_CLASSES: Record<string, string> = {
   ghost: 'glow-ghost', steel: 'glow-steel',
 };
 
-export function StudentCard({ student, pokemonData, onClick }: Props) {
+export function StudentCard({ student, pokemonData, onClick, index = 0 }: Props) {
   const stage = getEvolutionStage(student.totalScore);
   const { progress } = getProgressToNextEvolution(student.totalScore);
   const typeClass = TYPE_COLORS[student.type] || 'type-normal';
