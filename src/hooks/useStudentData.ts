@@ -105,10 +105,21 @@ function parseCsvData(text: string): Student[] {
     }
 
     const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
-    const totalKey = result.meta.fields?.find(f => f.toLowerCase().includes('total'));
-    if (totalKey) skipKeys.add(totalKey);
+    const skipPatterns = ['total', 'soma', 'nota', 'matricula'];
+    for (const f of (result.meta.fields || [])) {
+      const l = f.toLowerCase().trim();
+      if (skipPatterns.some(p => l.includes(p))) skipKeys.add(f);
+    }
 
-    const taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f));
+    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
+    let taskKeys = (result.meta.fields || []).filter(f => {
+      if (skipKeys.has(f)) return false;
+      const l = f.toLowerCase().trim();
+      return taskKeywords.some(k => l.includes(k));
+    });
+    if (taskKeys.length === 0) {
+      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f));
+    }
 
     return (result.data as any[])
       .filter(row => row[nameKey])
