@@ -420,6 +420,9 @@ export function useStudentData() {
         return;
       }
 
+      // Save URL for future refreshes
+      localStorage.setItem(SHEET_URL_KEY, sheetUrl);
+
       console.log('[Sheets] URL normalizada:', csvUrl);
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', {
@@ -447,6 +450,11 @@ export function useStudentData() {
     }
     setIsLoading(false);
   }, []);
+
+  const refreshFromSheet = useCallback(async () => {
+    const savedUrl = localStorage.getItem(SHEET_URL_KEY) || DEFAULT_SHEET_URL;
+    await importFromSheet(savedUrl);
+  }, [importFromSheet]);
 
   const importFromCsv = useCallback(async (file: File) => {
     setIsLoading(true);
