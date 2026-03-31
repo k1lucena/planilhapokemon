@@ -19,7 +19,7 @@ interface AdminPanelProps {
   onAddTask: (taskName: string) => void;
   onRemoveTask: (taskName: string) => void;
   onUpdateScore: (studentName: string, taskName: string, score: number) => void;
-  onImportSheet: () => void;
+  onImportSheet: (url: string) => void;
   onImportCsv: (file: File) => void;
   onImportJson: (file: File) => void;
   onReset: () => void;
