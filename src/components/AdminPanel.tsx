@@ -93,7 +93,7 @@ export function AdminPanel({
           </TabsList>
 
           <ScrollArea className="flex-1">
-            {/* QUICK GRADES TAB */}
+            {/* ACTIVITIES TAB */}
             <TabsContent value="grades" className="p-4 space-y-3 mt-0">
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Selecione o aluno</Label>
@@ -111,27 +111,31 @@ export function AdminPanel({
 
               {selectedStudent && (
                 <div className="space-y-3">
-                  {['Nota 1', 'Nota 2', 'Nota 3'].map((label, idx) => (
-                    <div key={label} className="flex items-center gap-3">
-                      <Label className="text-sm w-16">{label}</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        value={quickNotas[idx]}
-                        onChange={e => {
-                          const v = [...quickNotas] as [number, number, number];
-                          v[idx] = Math.max(0, Number(e.target.value) || 0);
-                          setQuickNotas(v);
-                        }}
-                        className="h-9 bg-background border-border text-center"
-                      />
-                    </div>
-                  ))}
+                  {Object.entries(taskScores).length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-2">Nenhuma atividade encontrada.</p>
+                  ) : (
+                    Object.entries(taskScores).map(([taskName, score]) => (
+                      <div key={taskName} className="flex items-center gap-3">
+                        <Label className="text-sm flex-1 truncate">{taskName}</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={score}
+                          onChange={e => {
+                            setTaskScores(prev => ({
+                              ...prev,
+                              [taskName]: Math.max(0, Number(e.target.value) || 0),
+                            }));
+                          }}
+                          className="h-9 w-20 bg-background border-border text-center"
+                        />
+                      </div>
+                    ))
+                  )}
 
-                  <Button onClick={handleSaveNotas} className="w-full gap-2" size="sm">
-                    <Save className="h-4 w-4" /> Salvar Notas
+                  <Button onClick={handleSaveTasks} className="w-full gap-2" size="sm">
+                    <Save className="h-4 w-4" /> Salvar Atividades
                   </Button>
                 </div>
               )}
