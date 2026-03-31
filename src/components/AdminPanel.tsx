@@ -18,7 +18,6 @@ interface AdminPanelProps {
   onAddStudent: (student: { name: string; pokemon: string; type: string }) => void;
   onRemoveStudent: (name: string) => void;
   onUpdateStudent: (originalName: string, updates: Partial<Pick<Student, 'name' | 'pokemon' | 'type'>>) => void;
-  onUpdateNotas: (studentName: string, nota1: number, nota2: number, nota3: number) => void;
   onAddTask: (taskName: string) => void;
   onRemoveTask: (taskName: string) => void;
   onUpdateScore: (studentName: string, taskName: string, score: number) => void;
