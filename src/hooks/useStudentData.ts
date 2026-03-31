@@ -219,7 +219,7 @@ export function useStudentData() {
     if (current.some(s => s.name.toLowerCase() === student.name.toLowerCase())) return;
     const tasks = student.tasks || current[0]?.tasks.map(t => ({ name: t.name, score: 0 })) || [];
     const totalScore = tasks.reduce((s, t) => s + t.score, 0);
-    const row = { name: student.name, pokemon: student.pokemon, type: student.type, tasks, total_score: totalScore };
+    const row = { name: student.name, pokemon: student.pokemon, type: student.type, tasks: tasks as any, total_score: totalScore };
     const { error } = await supabase.from('students').insert(row);
     if (!error) {
       const newStudent: Student = { ...student, tasks, totalScore };
