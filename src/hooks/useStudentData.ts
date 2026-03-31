@@ -185,10 +185,6 @@ function parseSheetData(text: string): Student[] {
       const compact = compactHeader(header);
       return compact === 'pokemon' || compact === 'apokemon';
     });
-    const typeIdx = headers.findIndex(header => {
-      const compact = compactHeader(header);
-      return compact === 'tipo' || compact === 'type';
-    });
     if (nameIdx === -1) return [];
 
     const notaIndices: Array<{ index: number; slot: 1 | 2 | 3 }> = [];
