@@ -19,7 +19,7 @@ const Index = () => {
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet,
-    resetToMock, evolutionEvent, clearEvolutionEvent,
+    resetToMock, evolutionQueue, shiftEvolutionQueue, evolveStudent,
   } = useStudentData();
 
   const pokemonNames = useMemo(() => students.map(s => s.pokemon), [students]);
