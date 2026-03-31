@@ -124,8 +124,7 @@ function findHeaderAndSlice(text: string): string {
   return text;
 }
 
-const SKIP_PATTERNS = ['total', 'soma', 'nota', 'matricula', 'evoluc', 'evoluç'];
-const TASK_KEYWORDS = ['tarefa', 'task', 'atividade', 'projeto'];
+const SKIP_PATTERNS = ['total', 'soma', 'média', 'media', 'nota', 'resultado', 'nota final', 'matricula', 'evoluc', 'evoluç'];
 
 function isSkipColumn(name: string): boolean {
   const l = name.toLowerCase().trim();
@@ -134,7 +133,7 @@ function isSkipColumn(name: string): boolean {
 
 function isTaskColumn(name: string): boolean {
   const l = name.toLowerCase().trim();
-  return TASK_KEYWORDS.some(k => l.includes(k));
+  return l.startsWith('atividade');
 }
 
 function parseCsvData(text: string): Student[] {
