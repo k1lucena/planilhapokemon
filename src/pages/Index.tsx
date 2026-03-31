@@ -41,13 +41,17 @@ const Index = () => {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
+            <Button variant="outline" size="sm" onClick={refreshFromSheet} disabled={isLoading} className="gap-1">
+              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Atualizar</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
               <Settings className="h-3 w-3" />
-              Gerenciar
+              <span className="hidden sm:inline">Gerenciar</span>
             </Button>
           </div>
         </div>
