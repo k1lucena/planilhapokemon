@@ -325,30 +325,11 @@ export function useStudentData() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [evolutionQueue, setEvolutionQueue] = useState<EvolutionEvent[]>([]);
+  const [evolutionEvent, setEvolutionEvent] = useState<EvolutionEvent | null>(null);
   const studentsRef = useRef<Student[]>([]);
 
   useEffect(() => { studentsRef.current = students; }, [students]);
   useEffect(() => { fetchStudents(); }, []);
-
-  const enqueueEvolutions = useCallback((oldStudents: Student[], newStudents: Student[]) => {
-    const events: EvolutionEvent[] = [];
-    for (const ns of newStudents) {
-      const os = oldStudents.find(s => s.name === ns.name);
-      const oldStage = os ? getStage(os.totalScore) : 0;
-      const newStage = getStage(ns.totalScore);
-      if (newStage > oldStage) {
-        events.push({ studentName: ns.name, pokemon: ns.pokemon, oldStage, newStage });
-      }
-    }
-    if (events.length > 0) {
-      setEvolutionQueue(prev => [...prev, ...events]);
-    }
-  }, []);
-
-  const triggerEvolution = useCallback((studentName: string, pokemon: string, oldStage: number, newStage: number) => {
-    setEvolutionQueue(prev => [...prev, { studentName, pokemon, oldStage, newStage }]);
-  }, []);
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
@@ -462,14 +443,70 @@ export function useStudentData() {
     if (!error) {
       setStudents(prev => prev.map(s => s.name === studentName ? updated : s));
       setLastUpdate(new Date());
+      if (newStage > oldStage) {
+        setEvolutionEvent({ studentName, pokemon: student.pokemon, oldStage, newStage });
+      }
     }
   }, []);
 
+  const importFromSheet = useCallback(async (sheetUrl: string) => {
+    setIsLoading(true);
+    try {
+      const csvUrl = buildSheetCsvUrl(sheetUrl);
+      if (!csvUrl) {
+        toast.error('URL inválida.');
+        setIsLoading(false);
+        return;
+      }
+      localStorage.setItem(SHEET_URL_KEY, sheetUrl);
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', { body: { url: csvUrl } });
+      if (fnError) throw new Error(fnError.message);
+      const text = typeof fnData === 'string' ? fnData : JSON.stringify(fnData);
+      const parsed = parseCsvData(text);
+      if (parsed.length === 0) {
+        toast.error('Nenhum aluno encontrado. Verifique se a planilha está publicada na web e possui uma coluna "NOME".');
+        setIsLoading(false);
+        return;
+      }
+      await supabase.from('students').delete().neq('name', '');
+      await upsertStudents(parsed);
+      toast.success(`${parsed.length} alunos importados!`);
+    } catch (e: any) {
+      toast.error(`Falha ao importar: ${e.message || 'erro desconhecido'}`);
+    }
+    setIsLoading(false);
+  }, []);
+
   const refreshFromSheet = useCallback(async () => {
-    const minDelay = new Promise(resolve => setTimeout(resolve, 400));
-    await Promise.all([fetchStudents(), minDelay]);
-    toast.success('Dados atualizados!');
-  }, [fetchStudents]);
+    const savedUrl = localStorage.getItem(SHEET_URL_KEY) || DEFAULT_SHEET_URL;
+    await importFromSheet(savedUrl);
+  }, [importFromSheet]);
+
+  const importFromCsv = useCallback(async (file: File) => {
+    setIsLoading(true);
+    try {
+      const text = await file.text();
+      const parsed = parseCsvData(text);
+      if (parsed.length === 0) { toast.error('CSV não reconhecido.'); setIsLoading(false); return; }
+      await supabase.from('students').delete().neq('name', '');
+      await upsertStudents(parsed);
+      toast.success(`${parsed.length} alunos importados!`);
+    } catch (e: any) { toast.error(`Falha: ${e.message}`); }
+    setIsLoading(false);
+  }, []);
+
+  const importFromJson = useCallback(async (file: File) => {
+    setIsLoading(true);
+    try {
+      const text = await file.text();
+      const parsed = parseJsonData(text);
+      if (parsed.length === 0) { toast.error('JSON não reconhecido.'); setIsLoading(false); return; }
+      await supabase.from('students').delete().neq('name', '');
+      await upsertStudents(parsed);
+      toast.success(`${parsed.length} alunos importados!`);
+    } catch (e: any) { toast.error(`Falha: ${e.message}`); }
+    setIsLoading(false);
+  }, []);
 
   const resetToMock = useCallback(async () => {
     setIsLoading(true);
@@ -479,52 +516,14 @@ export function useStudentData() {
     setIsLoading(false);
   }, []);
 
-  const shiftEvolutionQueue = useCallback(() => {
-    setEvolutionQueue(prev => prev.slice(1));
-  }, []);
-
-  const evolveStudent = useCallback(async (studentName: string) => {
-    const current = studentsRef.current;
-    const student = current.find(s => s.name === studentName);
-    if (!student) return;
-
-    const currentStage = getStage(student.totalScore);
-    if (currentStage >= 2) {
-      toast.info(`${studentName} já está no estágio máximo!`);
-      return;
-    }
-
-    const targetScore = currentStage === 0 ? 100 : 200;
-    const diff = targetScore - student.totalScore;
-    if (diff <= 0) return;
-
-    // Add score to first task (or create one)
-    let updatedTasks = [...student.tasks];
-    if (updatedTasks.length === 0) {
-      updatedTasks = [{ name: 'Evolução Manual', score: diff }];
-    } else {
-      updatedTasks = updatedTasks.map((t, i) => i === 0 ? { ...t, score: t.score + diff } : t);
-    }
-
-    const updated = recalcTotal({ ...student, tasks: updatedTasks });
-    const { error } = await supabase.from('students').update({
-      tasks: updated.tasks as any,
-      total_score: updated.totalScore,
-    }).eq('name', studentName);
-
-    if (!error) {
-      setStudents(prev => prev.map(s => s.name === studentName ? updated : s));
-      setLastUpdate(new Date());
-      triggerEvolution(studentName, student.pokemon, currentStage, currentStage + 1);
-      toast.success(`${studentName} evoluiu!`);
-    }
-  }, [triggerEvolution]);
+  const clearEvolutionEvent = useCallback(() => setEvolutionEvent(null), []);
 
   return {
     students, isLoading, lastUpdate,
     addStudent, removeStudent, updateStudent, updateNotas,
     addTask, removeTask, updateTaskScore,
+    importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet, resetToMock,
-    evolutionQueue, shiftEvolutionQueue, evolveStudent, triggerEvolution,
+    evolutionEvent, clearEvolutionEvent,
   };
 }

@@ -1,19 +1,22 @@
 
 
-## Corrigir feedback do botão "Atualizar"
+## Trocar notas por atividades no painel admin
 
-### Diagnóstico
+A aba "📝 Notas" do painel Gerenciar atualmente mostra apenas 3 campos (N1, N2, N3). O usuário quer editar as **atividades individuais** de cada aluno nessa aba.
 
-O botão **está funcionando** — a requisição ao banco retorna 200 com dados. O problema é que não há feedback visual claro: o spinner gira muito rápido (a query é rápida) e não há toast confirmando que os dados foram atualizados. O timestamp muda mas é pequeno e fácil de não notar.
+### Mudança
 
-### Alterações
+**Arquivo: `src/components/AdminPanel.tsx`**
 
-**1. `src/hooks/useStudentData.ts`** — Adicionar toast de feedback no `refreshFromSheet`
-- Após `fetchStudents()` completar com sucesso, chamar `toast.success('Dados atualizados!')` para dar feedback claro ao usuário
+Substituir os 3 inputs de Nota 1/2/3 por uma lista dinâmica das atividades do aluno selecionado:
 
-**2. (Opcional) Garantir spinner mínimo visível**  
-- Adicionar um `await` mínimo de ~300ms no `refreshFromSheet` para que o spinner seja perceptível, evitando que pareça que nada aconteceu
+- Ao selecionar um aluno, carregar suas `tasks[]` em estado local
+- Exibir cada atividade com nome + input numérico de pontuação
+- Botão "Salvar" chama `onUpdateScore` para cada atividade alterada
+- Remover `onUpdateNotas` / `quickNotas` — as notas N1/N2/N3 vêm da planilha importada, não de edição manual
+- Renomear a aba de "📝 Notas" para "📝 Atividades"
 
 ### Resultado
-O usuário verá uma notificação toast confirmando que os dados foram atualizados ao clicar no botão "Atualizar".
+
+O professor seleciona o aluno, vê todas as atividades listadas (Atividade 01, 02, etc.) e edita as pontuações individualmente — mais simples e direto.
 

@@ -17,8 +17,9 @@ const Index = () => {
     students, isLoading, lastUpdate,
     addStudent, removeStudent, updateStudent, updateNotas,
     addTask, removeTask, updateTaskScore,
+    importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet,
-    resetToMock, evolutionQueue, shiftEvolutionQueue, evolveStudent,
+    resetToMock, evolutionEvent, clearEvolutionEvent,
   } = useStudentData();
 
   const pokemonNames = useMemo(() => students.map(s => s.pokemon), [students]);
@@ -92,15 +93,18 @@ const Index = () => {
         onAddStudent={addStudent}
         onRemoveStudent={removeStudent}
         onUpdateStudent={updateStudent}
+        
         onAddTask={addTask}
         onRemoveTask={removeTask}
         onUpdateScore={updateTaskScore}
+        onImportSheet={importFromSheet}
+        onImportCsv={importFromCsv}
+        onImportJson={importFromJson}
         onReset={resetToMock}
-        onEvolveStudent={(name) => { setAdminOpen(false); evolveStudent(name); }}
         isLoading={isLoading}
       />
 
-      {evolutionQueue.length > 0 && <EvolutionAnimation event={evolutionQueue[0]} onComplete={shiftEvolutionQueue} />}
+      {evolutionEvent && <EvolutionAnimation event={evolutionEvent} onComplete={clearEvolutionEvent} />}
     </div>
   );
 };
