@@ -97,7 +97,7 @@ const Index = () => {
       </main>
 
       <footer className="border-t border-border bg-card/50 text-center py-4 mt-12">
-        <p className="font-pixel text-xs text-muted-foreground">Pokédex Arena © {new Date().getFullYear()}</p>
+        <p className="font-pixel text-xs text-muted-foreground">Pokédex © {new Date().getFullYear()}</p>
       </footer>
 
       <PokedexModal
