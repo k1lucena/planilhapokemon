@@ -42,12 +42,16 @@ function parseSheetData(text: string): Student[] {
     if (nameIdx === -1) return [];
 
     const taskIndices: number[] = [];
-    const totalIdx = headers.findIndex((h: string) => h.includes('total'));
-    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx, totalIdx].filter(i => i >= 0));
+    const skipCheckFns = [(h: string) => h.includes('total'), (h: string) => h.includes('soma'), (h: string) => h.includes('nota'), (h: string) => h.includes('matricula')];
+    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(i => i >= 0));
+    for (let i = 0; i < headers.length; i++) {
+      if (skipCheckFns.some(fn => fn(headers[i]))) skipIndices.add(i);
+    }
 
+    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
     for (let i = 0; i < headers.length; i++) {
       if (skipIndices.has(i)) continue;
-      if (headers[i] && (headers[i].includes('tarefa') || headers[i].includes('task') || /^\d+$/.test(headers[i]))) {
+      if (headers[i] && (taskKeywords.some(k => headers[i].includes(k)) || /^\d+$/.test(headers[i]))) {
         taskIndices.push(i);
       }
     }
