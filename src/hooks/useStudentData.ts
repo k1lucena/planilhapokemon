@@ -457,7 +457,18 @@ export function useStudentData() {
     await importFromSheet(savedUrl);
   }, [importFromSheet]);
 
-  const importFromCsv = useCallback(async (file: File) => {
+  // Auto-refresh a cada 5 minutos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const savedUrl = localStorage.getItem(SHEET_URL_KEY);
+      if (savedUrl) {
+        console.log('[Auto-refresh] Atualizando dados da planilha...');
+        refreshFromSheet();
+      }
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [refreshFromSheet]);
+
     setIsLoading(true);
     try {
       const text = await file.text();
