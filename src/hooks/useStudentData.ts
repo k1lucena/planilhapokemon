@@ -109,9 +109,40 @@ function parseSheetData(text: string): Student[] {
   }
 }
 
+/**
+ * Detecta a linha de cabeçalho real em texto CSV bruto.
+ * Procura a primeira linha que contenha "nome" (case-insensitive).
+ * Retorna o texto a partir dessa linha.
+ */
+function findHeaderAndSlice(text: string): string {
+  const lines = text.split(/\r?\n/);
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    if (/nome/i.test(lines[i])) {
+      console.log(`[CSV] Cabeçalho detectado na linha ${i + 1}`);
+      return lines.slice(i).join('\n');
+    }
+  }
+  // fallback: return original
+  return text;
+}
+
+const SKIP_PATTERNS = ['total', 'soma', 'nota', 'matricula', 'evoluc', 'evoluç'];
+const TASK_KEYWORDS = ['tarefa', 'task', 'atividade', 'projeto'];
+
+function isSkipColumn(name: string): boolean {
+  const l = name.toLowerCase().trim();
+  return SKIP_PATTERNS.some(p => l.includes(p));
+}
+
+function isTaskColumn(name: string): boolean {
+  const l = name.toLowerCase().trim();
+  return TASK_KEYWORDS.some(k => l.includes(k));
+}
+
 function parseCsvData(text: string): Student[] {
   try {
-    const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+    const cleanText = findHeaderAndSlice(text);
+    const result = Papa.parse(cleanText, { header: true, skipEmptyLines: true });
     if (!result.data || result.data.length === 0) return [];
     
     console.log('[CSV] Colunas detectadas:', result.meta.fields);
@@ -131,38 +162,40 @@ function parseCsvData(text: string): Student[] {
 
     if (!nameKey) {
       console.error('[CSV] Coluna de nome não encontrada. Colunas:', result.meta.fields);
+      toast.error('Coluna "NOME" não encontrada no CSV. Verifique o formato.');
       return [];
     }
 
     const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
-    const skipPatterns = ['total', 'soma', 'nota', 'matricula'];
     for (const f of (result.meta.fields || [])) {
-      const l = f.toLowerCase().trim();
-      if (skipPatterns.some(p => l.includes(p))) skipKeys.add(f);
+      if (isSkipColumn(f)) skipKeys.add(f);
     }
 
-    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
+    // First try explicit task keywords
     let taskKeys = (result.meta.fields || []).filter(f => {
       if (skipKeys.has(f)) return false;
-      const l = f.toLowerCase().trim();
-      return taskKeywords.some(k => l.includes(k));
+      return isTaskColumn(f);
     });
+    // Fallback: use remaining non-skip numeric-looking columns
     if (taskKeys.length === 0) {
-      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f));
+      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f) && f.trim() !== '');
     }
 
+    console.log('[CSV] Colunas de tarefa:', taskKeys);
+    console.log('[CSV] Colunas ignoradas:', [...skipKeys]);
+
     return (result.data as any[])
-      .filter(row => row[nameKey])
+      .filter(row => row[nameKey] && String(row[nameKey]).trim() !== '')
       .map(row => {
-        const tasks = taskKeys.map(k => ({
-          name: k,
+        const tasks = taskKeys.map((k, i) => ({
+          name: k.trim() || `Atividade ${String(i + 1).padStart(2, '0')}`,
           score: Number(row[k]) || 0,
         }));
         const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
         const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
         return {
-          name: String(row[nameKey]),
+          name: String(row[nameKey]).trim(),
           pokemon,
           type: type || inferPokemonType(pokemon),
           tasks,
