@@ -54,7 +54,7 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
           return (
             <div
               key={student.name}
-              className="flex flex-col items-center cursor-pointer group animate-slide-up"
+              className={`flex flex-col items-center cursor-pointer group animate-slide-up podium-item podium-pos-${pos}`}
               style={{ animationDelay: `${i * 0.15}s` }}
               onClick={() => onSelect(student)}
             >
