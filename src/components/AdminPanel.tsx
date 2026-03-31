@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Student, TYPE_LABELS } from '@/lib/types';
 import { StudentForm } from './StudentForm';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Pencil, UserPlus, RotateCcw, FileSpreadsheet, FileJson, FileText, Save, Zap } from 'lucide-react';
+import { Trash2, Pencil, UserPlus, RotateCcw, Download, Save, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AdminPanelProps {
@@ -21,25 +21,50 @@ interface AdminPanelProps {
   onAddTask: (taskName: string) => void;
   onRemoveTask: (taskName: string) => void;
   onUpdateScore: (studentName: string, taskName: string, score: number) => void;
-  onImportSheet: (url: string) => void;
-  onImportCsv: (file: File) => void;
-  onImportJson: (file: File) => void;
   onReset: () => void;
   onEvolveStudent: (studentName: string) => void;
   isLoading: boolean;
+}
+
+function downloadFile(content: string, filename: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCsv(students: Student[]) {
+  if (students.length === 0) { toast.error('Nenhum aluno para exportar.'); return; }
+  const taskNames = students[0]?.tasks.map(t => t.name) || [];
+  const header = ['Nome', 'Pokémon', 'Tipo', 'Nota1', 'Nota2', 'Nota3', ...taskNames, 'Total'].join(',');
+  const rows = students.map(s => {
+    const tasks = taskNames.map(tn => {
+      const t = s.tasks.find(task => task.name === tn);
+      return t ? t.score : 0;
+    });
+    return [s.name, s.pokemon, s.type, s.nota1, s.nota2, s.nota3, ...tasks, s.totalScore].join(',');
+  });
+  downloadFile([header, ...rows].join('\n'), 'pokedex_alunos.csv', 'text/csv');
+  toast.success('CSV exportado!');
+}
+
+function exportJson(students: Student[]) {
+  if (students.length === 0) { toast.error('Nenhum aluno para exportar.'); return; }
+  downloadFile(JSON.stringify(students, null, 2), 'pokedex_alunos.json', 'application/json');
+  toast.success('JSON exportado!');
 }
 
 export function AdminPanel({
   open, onClose, students,
   onAddStudent, onRemoveStudent, onUpdateStudent,
   onAddTask, onRemoveTask, onUpdateScore,
-  onImportSheet, onImportCsv, onImportJson, onReset, onEvolveStudent, isLoading,
+  onReset, onEvolveStudent, isLoading,
 }: AdminPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [sheetUrl, setSheetUrl] = useState('');
-  const csvInputRef = useRef<HTMLInputElement>(null);
-  const jsonInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [taskScores, setTaskScores] = useState<Record<string, number>>({});
@@ -74,11 +99,6 @@ export function AdminPanel({
     }
   };
 
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>, handler: (file: File) => void) => {
-    const file = e.target.files?.[0];
-    if (file) { handler(file); e.target.value = ''; }
-  };
-
   return (
     <Sheet open={open} onOpenChange={v => !v && onClose()}>
       <SheetContent className="w-full sm:max-w-md bg-card border-border p-0 flex flex-col">
@@ -90,7 +110,7 @@ export function AdminPanel({
           <TabsList className="mx-4 mt-2 bg-muted/50">
             <TabsTrigger value="grades" className="text-xs flex-1">📝 Atividades</TabsTrigger>
             <TabsTrigger value="students" className="text-xs flex-1">👥 Alunos</TabsTrigger>
-            <TabsTrigger value="data" className="text-xs flex-1">📥 Dados</TabsTrigger>
+            <TabsTrigger value="data" className="text-xs flex-1">📤 Exportar</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1">
@@ -199,24 +219,16 @@ export function AdminPanel({
               )}
             </TabsContent>
 
-            {/* DATA TAB */}
+            {/* EXPORT TAB */}
             <TabsContent value="data" className="p-4 space-y-4 mt-0">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Importar dados</p>
-                <div className="space-y-1.5">
-                  <Input placeholder="Cole o link da planilha" value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} className="text-xs h-8" />
-                  <Button onClick={() => onImportSheet(sheetUrl)} disabled={isLoading || !sheetUrl.trim()} variant="outline" className="w-full gap-2" size="sm">
-                    <FileSpreadsheet className="h-4 w-4" /> {isLoading ? 'Importando...' : 'Importar Google Sheets'}
-                  </Button>
-                </div>
-                <Button onClick={() => csvInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
-                  <FileText className="h-4 w-4" /> Importar CSV
+                <p className="text-sm font-medium text-foreground">Exportar dados</p>
+                <Button onClick={() => exportCsv(students)} variant="outline" className="w-full gap-2" size="sm">
+                  <Download className="h-4 w-4" /> Exportar CSV
                 </Button>
-                <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={e => handleFileImport(e, onImportCsv)} />
-                <Button onClick={() => jsonInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
-                  <FileJson className="h-4 w-4" /> Importar JSON
+                <Button onClick={() => exportJson(students)} variant="outline" className="w-full gap-2" size="sm">
+                  <Download className="h-4 w-4" /> Exportar JSON
                 </Button>
-                <input ref={jsonInputRef} type="file" accept=".json" className="hidden" onChange={e => handleFileImport(e, onImportJson)} />
               </div>
               <div className="pt-4 border-t border-border">
                 <Button onClick={onReset} variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" size="sm">

@@ -88,7 +88,7 @@ export function EvolutionAnimation({ event, onComplete }: EvolutionAnimationProp
   }, [skip]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-md">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/90 backdrop-blur-md">
       <div className="flex flex-col items-center gap-6">
         {/* Old sprite */}
         <div
