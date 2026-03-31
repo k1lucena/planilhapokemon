@@ -92,12 +92,11 @@ export interface StudentGrades {
 }
 
 export function calculateGrades(tasks: StudentTask[]): StudentGrades {
-  const scores = tasks.map(t => t.score);
-  const nota1 = scores.length >= 5 ? scores.slice(0, 5).reduce((a, b) => a + b, 0) : 0;
-  const nota2 = scores.length >= 10 ? scores.slice(5, 10).reduce((a, b) => a + b, 0) : 0;
-  const nota3 = scores.length >= 11 ? scores[10] : 0;
-  const total = nota1 + nota2 + nota3;
-  return { nota1: +nota1.toFixed(1), nota2: +nota2.toFixed(1), nota3: +nota3.toFixed(1), media: +total.toFixed(1) };
+  const n1 = tasks.find(t => t.name === 'N1')?.score ?? 0;
+  const n2 = tasks.find(t => t.name === 'N2')?.score ?? 0;
+  const n3 = tasks.find(t => t.name === 'N3')?.score ?? 0;
+  const total = n1 + n2 + n3;
+  return { nota1: +n1.toFixed(1), nota2: +n2.toFixed(1), nota3: +n3.toFixed(1), media: +total.toFixed(1) };
 }
 
 export function getGradeColor(grade: number): string {

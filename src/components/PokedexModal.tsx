@@ -22,10 +22,6 @@ export function PokedexModal({ student, pokemonData, open, onClose }: Props) {
   const stageLabels = ['Base', 'Evolução 1', 'Evolução Final'];
   const grades = calculateGrades(student.tasks);
 
-  const n1Tasks = student.tasks.slice(0, 5);
-  const n2Tasks = student.tasks.slice(5, 10);
-  const n3Task = student.tasks[10];
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-card border border-border">

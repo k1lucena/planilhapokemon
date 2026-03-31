@@ -122,16 +122,25 @@ function findHeaderAndSlice(text: string): string {
   return text;
 }
 
-const SKIP_PATTERNS = ['total', 'soma', 'média', 'media', 'nota', 'resultado', 'nota final', 'matricula', 'evoluc', 'evoluç'];
+// Colunas-alvo para extração direta de notas
+const GRADE_COLUMNS: Record<string, string> = {
+  'soma 1': 'N1',
+  'soma 2': 'N2',
+  'trabalho final': 'N3',
+};
 
-function isSkipColumn(name: string): boolean {
-  const l = name.toLowerCase().trim();
-  return SKIP_PATTERNS.some(p => l.includes(p));
-}
-
-function isTaskColumn(name: string): boolean {
-  const l = name.toLowerCase().trim();
-  return l.startsWith('atividade');
+function findGradeColumns(headers: string[]): { index: number; label: string }[] {
+  const result: { index: number; label: string }[] = [];
+  for (let i = 0; i < headers.length; i++) {
+    const h = headers[i].toLowerCase().trim();
+    for (const [pattern, label] of Object.entries(GRADE_COLUMNS)) {
+      if (h === pattern || h.includes(pattern)) {
+        result.push({ index: i, label });
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 function parseCsvData(text: string): Student[] {
