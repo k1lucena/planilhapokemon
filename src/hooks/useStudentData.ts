@@ -279,7 +279,7 @@ export function useStudentData() {
     const newStage = getStage(newScore);
 
     const { error } = await supabase.from('students').update({
-      tasks: updated.tasks,
+      tasks: updated.tasks as any,
       total_score: updated.totalScore,
     }).eq('name', studentName);
 
