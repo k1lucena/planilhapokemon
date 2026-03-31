@@ -101,9 +101,7 @@ export function calculateGrades(tasks: StudentTask[]): StudentGrades {
 }
 
 export function getGradeColor(grade: number): string {
-  if (grade >= 7) return 'text-emerald-400';
-  if (grade >= 5) return 'text-yellow-400';
-  return 'text-red-400';
+  return 'text-foreground';
 }
 
 export function getGradeBg(grade: number): string {
