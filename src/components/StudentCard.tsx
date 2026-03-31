@@ -5,6 +5,7 @@ interface Props {
   student: Student;
   pokemonData?: PokemonData;
   onClick: () => void;
+  index?: number;
 }
 
 const GLOW_CLASSES: Record<string, string> = {
@@ -15,7 +16,7 @@ const GLOW_CLASSES: Record<string, string> = {
   ghost: 'glow-ghost', steel: 'glow-steel',
 };
 
-export function StudentCard({ student, pokemonData, onClick }: Props) {
+export function StudentCard({ student, pokemonData, onClick, index = 0 }: Props) {
   const stage = getEvolutionStage(student.totalScore);
   const { progress } = getProgressToNextEvolution(student.totalScore);
   const typeClass = TYPE_COLORS[student.type] || 'type-normal';
@@ -35,7 +36,8 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
 
   return (
     <div
-      className={`glass-card rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 ${glowClass} overflow-hidden animate-fade-in`}
+      className={`glass-card rounded-xl cursor-pointer transition-all duration-500 hover:scale-105 hover:-translate-y-1 ${glowClass} overflow-hidden animate-fade-in student-card-hover`}
+      style={{ animationDelay: `${index * 0.08}s` }}
       onClick={onClick}
     >
       <div className="p-4 flex flex-col items-center text-center">
@@ -57,19 +59,22 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
 
         <p className="font-pixel text-sm text-primary mb-2">{student.totalScore} pts</p>
 
-        {/* Grades - 4 columns */}
-        <div className="w-full grid grid-cols-4 gap-1 mb-2 text-[10px]">
+        {/* Grades - 3 columns + total */}
+        <div className="w-full grid grid-cols-3 gap-1 mb-1 text-[10px]">
           {[
             { label: 'N1', value: grades.nota1 },
             { label: 'N2', value: grades.nota2 },
             { label: 'N3', value: grades.nota3 },
-            { label: 'Méd', value: grades.media },
           ].map(g => (
             <div key={g.label} className="rounded bg-muted/50 py-1 px-0.5">
               <span className="text-muted-foreground">{g.label}</span>
-              <p className={`font-bold text-xs ${getGradeColor(g.value)}`}>{g.value}</p>
+              <p className="font-bold text-xs text-foreground">{g.value}</p>
             </div>
           ))}
+        </div>
+        <div className="w-full rounded bg-muted/50 py-1 px-0.5 text-[10px] mb-2">
+          <span className="text-muted-foreground">Total</span>
+          <p className="font-bold text-xs text-primary">{grades.media}</p>
         </div>
 
         <div className="w-full">

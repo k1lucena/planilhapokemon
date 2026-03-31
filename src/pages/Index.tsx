@@ -81,12 +81,13 @@ const Index = () => {
           </h2>
           <p className="text-center text-muted-foreground text-sm mb-6">Acompanhe o progresso de cada aluno</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {sorted.map(student => (
+            {sorted.map((student, i) => (
               <StudentCard
                 key={student.name}
                 student={student}
                 pokemonData={pokemonMap.get(student.pokemon)}
                 onClick={() => setSelectedStudent(student)}
+                index={i}
               />
             ))}
           </div>
