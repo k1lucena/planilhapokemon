@@ -1,56 +1,49 @@
 
 
-## Apenas 3 Iniciais + Tudo em pt-BR + Sprites Animados no Pódio
+## Corrigir Importação de Dados (Sheets, CSV, JSON)
 
-### 1. Restringir Pokémon aos 3 Iniciais
+### Problemas Identificados
 
-**`src/components/StudentForm.tsx`**: Substituir o campo de texto livre por um `Select` com 3 opções fixas:
-- Bulbasaur (tipo: grass)
-- Charmander (tipo: fire)
-- Squirtle (tipo: water)
+1. **Google Sheets**: O `fetch()` direto para `docs.google.com` é bloqueado por CORS no navegador — a requisição falha silenciosamente
+2. **Falhas silenciosas**: Quando CSV/JSON/Sheets retorna array vazio (headers não reconhecidos, formato errado), nenhuma mensagem de erro é exibida ao usuário
+3. **Headers CSV inflexíveis**: Se o CSV do usuário tem colunas com nomes ligeiramente diferentes (ex: "Nome do Aluno" vs "Nome"), o parse falha sem aviso
 
-Ao selecionar o Pokémon, o tipo é preenchido automaticamente. Remover o select de tipo separado.
+### Solução
 
-**`src/lib/mockData.ts`**: Atualizar mock para usar apenas bulbasaur, charmander e squirtle, distribuindo os alunos entre os 3. Remover pokémons como pikachu, eevee, gastly, etc.
+**1. Google Sheets via Edge Function (proxy CORS)**
+- Criar edge function `import-sheet` que faz o fetch do Google Sheets no servidor (sem CORS)
+- Retorna o JSON já parseado para o frontend
+- `importFromSheet` chama a edge function ao invés de fetch direto
 
-### 2. Sprites Animados no Pódio (GIFs)
+**2. Feedback com Toast em todas as importações**
+- Importar `toast` do sonner em `useStudentData.ts`
+- Mostrar toast de sucesso com quantidade de alunos importados
+- Mostrar toast de erro quando o parse retorna vazio ou a requisição falha
+- Mensagens claras: "X alunos importados com sucesso" / "Formato não reconhecido. Verifique as colunas do arquivo."
 
-**`src/hooks/usePokemonData.ts`**: Além do sprite estático (official-artwork), buscar também o sprite animado da PokéAPI:
-- `sprites.versions['generation-v']['black-white'].animated.front_default` para cada evolução
-- Salvar como campo `animatedSprite` no `PokemonEvolution`
+**3. Parser CSV mais flexível**
+- Aceitar mais variações de headers: "nome do aluno", "estudante", "aluno(a)", etc.
+- Se não encontrar coluna de pokémon, usar "bulbasaur" como padrão (ao invés de rejeitar o arquivo inteiro)
+- Log das colunas detectadas no console para debug
 
-**`src/lib/types.ts`**: Adicionar campo `animatedSprite?: string` ao `PokemonEvolution`.
+**4. Parser JSON mais flexível**
+- Aceitar também objetos com chaves em pt-BR: `nome`, `pokémon`, `tipo`, `tarefas`
+- Aceitar objeto raiz com array dentro (ex: `{ alunos: [...] }`)
 
-**`src/components/Podium.tsx`**: Usar o sprite animado (GIF) em vez do estático. Adicionar CSS de bounce/float contínuo para dar vida extra. Manter fallback para sprite estático.
-
-### 3. Traduzir Tudo para pt-BR
-
-Varrer todos os componentes e traduzir strings restantes em inglês:
-- `battleSystem.ts`: "Em alta", "Subindo", "Estagnado" (já em pt-BR, ok)
-- `Podium.tsx`: ok
-- `StudentCard.tsx`: labels "MAX", "pts" → manter
-- `Rankings.tsx`: verificar e traduzir headers
-- `PokedexModal.tsx`: verificar e traduzir
-- `AdminPanel.tsx`: já em pt-BR
-- Tipos dos pokémon: exibir tradução pt-BR (fogo, água, planta) nos badges em vez de "fire", "water", "grass"
-
-**Mapeamento de tipos pt-BR** em `src/lib/types.ts`:
-```
-fire → Fogo, water → Água, grass → Planta
-```
-
-Como agora só temos 3 tipos, simplifica bastante.
-
-### Arquivos Modificados
+### Arquivos
 
 | Arquivo | Mudança |
 |---|---|
-| `src/lib/types.ts` | Adicionar `animatedSprite` a `PokemonEvolution`, mapa de tradução de tipos |
-| `src/lib/mockData.ts` | Apenas bulbasaur/charmander/squirtle |
-| `src/hooks/usePokemonData.ts` | Buscar sprites animados (GIF) |
-| `src/components/StudentForm.tsx` | Select fixo com 3 pokémons, tipo automático |
-| `src/components/Podium.tsx` | Usar sprite animado, animação bounce |
-| `src/components/StudentCard.tsx` | Exibir tipo em pt-BR |
-| `src/components/PokedexModal.tsx` | Traduzir strings restantes |
-| `src/components/Rankings.tsx` | Traduzir strings restantes |
+| `supabase/functions/import-sheet/index.ts` | Nova edge function proxy para Google Sheets |
+| `src/hooks/useStudentData.ts` | Chamar edge function, adicionar toasts, melhorar parsers |
+
+### Detalhes Técnicos
+
+**Edge Function `import-sheet`:**
+```typescript
+// Faz fetch do Google Sheets URL, retorna texto raw
+// Evita CORS pois roda no servidor
+```
+
+**Toasts:** Usar `import { toast } from 'sonner'` (já disponível no projeto via sonner/toaster).
 
