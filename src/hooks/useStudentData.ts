@@ -325,11 +325,30 @@ export function useStudentData() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [evolutionEvent, setEvolutionEvent] = useState<EvolutionEvent | null>(null);
+  const [evolutionQueue, setEvolutionQueue] = useState<EvolutionEvent[]>([]);
   const studentsRef = useRef<Student[]>([]);
 
   useEffect(() => { studentsRef.current = students; }, [students]);
   useEffect(() => { fetchStudents(); }, []);
+
+  const enqueueEvolutions = useCallback((oldStudents: Student[], newStudents: Student[]) => {
+    const events: EvolutionEvent[] = [];
+    for (const ns of newStudents) {
+      const os = oldStudents.find(s => s.name === ns.name);
+      const oldStage = os ? getStage(os.totalScore) : 0;
+      const newStage = getStage(ns.totalScore);
+      if (newStage > oldStage) {
+        events.push({ studentName: ns.name, pokemon: ns.pokemon, oldStage, newStage });
+      }
+    }
+    if (events.length > 0) {
+      setEvolutionQueue(prev => [...prev, ...events]);
+    }
+  }, []);
+
+  const triggerEvolution = useCallback((studentName: string, pokemon: string, oldStage: number, newStage: number) => {
+    setEvolutionQueue(prev => [...prev, { studentName, pokemon, oldStage, newStage }]);
+  }, []);
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
