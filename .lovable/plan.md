@@ -1,49 +1,55 @@
 
 
-## Substituir batalhas por notas + layout moderno
+## Voltar ao estilo Pokédex + corrigir dados + separar notas + simplificar edição
 
-### Mudanças principais
+### Problemas identificados
 
-**1. Remover sistema de batalhas**
-- Eliminar `src/lib/battleSystem.ts`
-- Remover todas as referências a `battleStats`, `generateBattleResults`, `PlayerBattleStats` de:
-  - `Index.tsx`, `Podium.tsx`, `StudentCard.tsx`, `Rankings.tsx`, `PokedexModal.tsx`
+1. **Dados errados**: O mock tem GABRIEL DA TRUFA e JONATHA que não existem na planilha real. A planilha tem 18 alunos, não 20.
+2. **Notas invisíveis**: No card e no modal, as notas das atividades ficam amontoadas e difíceis de ler.
+3. **Edição complexa**: Para editar notas, é preciso navegar até a aba "Tarefas", abrir cada tarefa individualmente e editar aluno por aluno — muito lento.
+4. **Visual perdeu o estilo Pokédex**: O header ficou genérico após a modernização.
 
-**2. Calcular notas (NOTA1, NOTA2, NOTA3) a partir das tarefas**
-Baseado na estrutura da planilha, as notas são derivadas das atividades:
-- **NOTA1** = média das atividades 01-05 (índices 0-4)
-- **NOTA2** = média das atividades 06-10 (índices 5-9)
-- **NOTA3** = Projeto Final (índice 10)
+### Plano
 
-Criar um helper `calculateGrades(tasks)` em `src/lib/types.ts` que retorna `{ nota1, nota2, nota3, media }`.
+**1. Corrigir mockData.ts**
+- Remover GABRIEL DA TRUFA e JONATHA (não existem na planilha).
+- Manter os 18 alunos reais com scores exatos do CSV.
 
-**3. Redesenhar layout — visual moderno e limpo**
+**2. Restaurar visual Pokédex no header**
+- Trazer de volta o fundo vermelho escuro estilo Pokédex no header com a lente azul circular e os LEDs decorativos (verde, amarelo, vermelho).
+- Manter o botão de Atualizar e Gerenciar no header.
 
-| Componente | Antes | Depois |
-|---|---|---|
-| **Header** | Pokédex retrô com LEDs | Header limpo, gradiente sutil, sem LEDs |
-| **Podium** | Arena de batalha com V/D | Top 3 com notas e medalhas, sem referência a batalha |
-| **StudentCard** | Compacto com stats de batalha | Card glassmorphism com notas N1/N2/N3 visíveis, barra de progresso mais elegante |
-| **Rankings** | 3 tabs (Geral/Tipo/Batalhas) | 2 tabs (Geral/Por Tipo), coluna de notas visível |
-| **PokedexModal** | 3 tabs (Evolução/Tarefas/Batalhas) | 2 tabs (Evolução/Notas), tab Notas mostra tabela com todas atividades + N1/N2/N3/Média |
+**3. Separar notas das atividades nos cards e modal**
 
-**4. Arquivos a alterar**
+No **StudentCard**:
+- Mostrar apenas o Pokémon, nome, tipo, pontos totais e barra de progresso.
+- Abaixo, mostrar N1, N2, N3 e Média em 4 colunas compactas e legíveis com cores (verde/amarelo/vermelho).
 
-| Arquivo | Ação |
+No **PokedexModal** (tab Notas):
+- Dividir visualmente em 3 blocos:
+  - **Nota 1** (Atividades 01-05) — lista com nome e score de cada
+  - **Nota 2** (Atividades 06-10) — idem
+  - **Nota 3** (Projeto Final) — único item
+- Cada bloco com header colorido e a média/nota calculada ao lado.
+- No final, card de resumo com N1, N2, N3 e Média Final.
+
+**4. Simplificar edição de notas — nova aba "Notas Rápidas" no AdminPanel**
+
+Substituir a aba "Tarefas" por uma visão de tabela/planilha:
+- Dropdown para selecionar o aluno.
+- Ao selecionar, mostrar TODAS as 11 atividades como uma lista vertical com input numérico ao lado de cada uma.
+- Botão "Salvar" que atualiza todas as notas de uma vez.
+- Isso é muito mais rápido que o fluxo atual de abrir cada tarefa.
+
+### Arquivos a alterar
+
+| Arquivo | Mudança |
 |---|---|
-| `src/lib/battleSystem.ts` | Deletar |
-| `src/lib/types.ts` | Adicionar `calculateGrades()` |
-| `src/pages/Index.tsx` | Remover battleStats, passar grades |
-| `src/components/Podium.tsx` | Trocar V/D por notas, trocar "ARENA" por "TOP 3" |
-| `src/components/StudentCard.tsx` | Mostrar N1/N2/N3 no lugar de V/D |
-| `src/components/Rankings.tsx` | Remover tab Batalhas, adicionar colunas de notas |
-| `src/components/PokedexModal.tsx` | Trocar tab Batalhas por detalhamento de notas |
-| `src/index.css` | Ajustar cores/estilos para visual mais moderno (gradientes suaves, menos "pixel art") |
-
-**5. Estilo visual moderno**
-- Manter tema escuro mas com gradientes mais suaves
-- Reduzir uso de `font-pixel` (manter só em títulos principais)
-- Cards com backdrop-blur mais pronunciado e bordas sutis
-- Badges de tipo mais refinados
-- Notas com indicadores visuais de cor (verde ≥7, amarelo ≥5, vermelho <5)
+| `src/lib/mockData.ts` | Remover 2 alunos inexistentes |
+| `src/index.css` | Restaurar estilo Pokédex no header (fundo vermelho, LEDs) |
+| `src/pages/Index.tsx` | Ajustar header com visual Pokédex |
+| `src/components/StudentCard.tsx` | Manter notas separadas e legíveis |
+| `src/components/PokedexModal.tsx` | Separar atividades em blocos N1/N2/N3 |
+| `src/components/AdminPanel.tsx` | Trocar aba "Tarefas" por "Notas Rápidas" com seleção de aluno + lista de inputs |
+| `src/components/TaskManager.tsx` | Reescrever como editor rápido por aluno |
 
