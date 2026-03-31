@@ -30,7 +30,7 @@ interface AdminPanelProps {
 
 export function AdminPanel({
   open, onClose, students,
-  onAddStudent, onRemoveStudent, onUpdateStudent, onUpdateNotas,
+  onAddStudent, onRemoveStudent, onUpdateStudent,
   onAddTask, onRemoveTask, onUpdateScore,
   onImportSheet, onImportCsv, onImportJson, onReset, isLoading,
 }: AdminPanelProps) {
@@ -41,20 +41,24 @@ export function AdminPanel({
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedStudent, setSelectedStudent] = useState<string>('');
-  const [quickNotas, setQuickNotas] = useState<[number, number, number]>([0, 0, 0]);
+  const [taskScores, setTaskScores] = useState<Record<string, number>>({});
 
   const handleSelectStudent = (name: string) => {
     const s = students.find(st => st.name === name);
     if (s) {
       setSelectedStudent(name);
-      setQuickNotas([s.nota1, s.nota2, s.nota3]);
+      const scores: Record<string, number> = {};
+      s.tasks.forEach(t => { scores[t.name] = t.score; });
+      setTaskScores(scores);
     }
   };
 
-  const handleSaveNotas = () => {
+  const handleSaveTasks = () => {
     if (!selectedStudent) return;
-    onUpdateNotas(selectedStudent, quickNotas[0], quickNotas[1], quickNotas[2]);
-    toast.success(`Notas de ${selectedStudent} salvas!`);
+    Object.entries(taskScores).forEach(([taskName, score]) => {
+      onUpdateScore(selectedStudent, taskName, score);
+    });
+    toast.success(`Atividades de ${selectedStudent} salvas!`);
   };
 
   const handleAdd = (data: { name: string; pokemon: string; type: string }) => {
