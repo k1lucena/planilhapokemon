@@ -151,12 +151,12 @@ function parseCsvData(text: string): Student[] {
           score: parseNumericValue(row[key]),
         }));
         const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
-        const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
+        const type = inferPokemonType(pokemon);
 
         return {
           name: String(row[nameKey]).trim(),
           pokemon,
-          type: type || inferPokemonType(pokemon),
+          type,
           tasks,
           totalScore: tasks.reduce((sum, task) => sum + task.score, 0),
           ...extractNotasFromRow(notaKeys, row),
