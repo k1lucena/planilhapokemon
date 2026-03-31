@@ -1,24 +1,49 @@
 import { Student } from './types';
 
+const T = (s: number) => s;
+
+const TASK_NAMES = [
+  'Atividade 01 - Apresentação',
+  'Atividade 02 - Estudos de Casos',
+  'Atividade 03 - Desenho (Duplas)',
+  'Atividade 04 - Indent. de Probl.',
+  'Atividade 05 - Entrevistas',
+  'Atividade 06 - Personas',
+  'Atividade 07 - Protótipos',
+  'Atividade 08 - Desafio Cabide',
+  'Atividade 09 - Tela App',
+  'Atividade 10 - Questionário UEQ',
+  'Projeto Final',
+];
+
+function mkTasks(scores: number[]) {
+  return scores.map((s, i) => ({ name: TASK_NAMES[i], score: s }));
+}
+
+function mkStudent(name: string, pokemon: string, type: string, scores: number[]): Student {
+  const tasks = mkTasks(scores);
+  return { name, pokemon, type, tasks, totalScore: scores.reduce((a, b) => a + b, 0) };
+}
+
 export const MOCK_STUDENTS: Student[] = [
-  { name: 'MIGUEL', pokemon: 'charizard', type: 'fire', tasks: [{ name: 'Tarefa 1', score: 0 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 40 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 40 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 100 }], totalScore: 270 },
-  { name: 'HELLEN', pokemon: 'blastoise', type: 'water', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 40 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 70 }], totalScore: 235 },
-  { name: 'CHICO', pokemon: 'wartortle', type: 'water', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 5 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 5 }, { name: 'Tarefa 5', score: 5 }, { name: 'Tarefa 6', score: 5 }, { name: 'Tarefa 7', score: 15 }, { name: 'Tarefa 8', score: 10 }, { name: 'Tarefa 9', score: 20 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 100 }], totalScore: 195 },
-  { name: 'LORENA', pokemon: 'venusaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 90 }], totalScore: 245 },
-  { name: 'ADONES', pokemon: 'venusaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 25 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 100 }], totalScore: 250 },
-  { name: 'CARLOS', pokemon: 'venusaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 10 }, { name: 'Tarefa 7', score: 40 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 25 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 70 }], totalScore: 225 },
-  { name: 'GABRIEL MACHADO', pokemon: 'venusaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 16 }, { name: 'Tarefa 11', score: 70 }], totalScore: 221 },
-  { name: 'MATHEUS', pokemon: 'charizard', type: 'fire', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 10 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 40 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 70 }], totalScore: 230 },
-  { name: 'PREFEITO', pokemon: 'charmander', type: 'fire', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 0 }, { name: 'Tarefa 5', score: 0 }, { name: 'Tarefa 6', score: 10 }, { name: 'Tarefa 7', score: 10 }, { name: 'Tarefa 8', score: 10 }, { name: 'Tarefa 9', score: 10 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 10 }], totalScore: 90 },
-  { name: 'GDIAS', pokemon: 'charizard', type: 'fire', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 40 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 80 }], totalScore: 245 },
-  { name: 'BAGGIO', pokemon: 'charmeleon', type: 'fire', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 10 }, { name: 'Tarefa 7', score: 20 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 50 }], totalScore: 190 },
-  { name: 'EVANDERSON', pokemon: 'blastoise', type: 'water', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 5 }, { name: 'Tarefa 7', score: 40 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 18 }, { name: 'Tarefa 11', score: 95 }], totalScore: 248 },
-  { name: 'YURI', pokemon: 'charizard', type: 'fire', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 90 }], totalScore: 245 },
-  { name: 'K1', pokemon: 'charmander', type: 'water', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 95 }], totalScore: 250 },
-  { name: 'BOLA', pokemon: 'ivysaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 5 }, { name: 'Tarefa 7', score: 30 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 20 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 35 }], totalScore: 170 },
-  { name: 'HELENA', pokemon: 'venusaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 10 }, { name: 'Tarefa 7', score: 40 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 70 }], totalScore: 230 },
-  { name: 'KAIOBA', pokemon: 'bulbasaur', type: 'grass', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 0 }, { name: 'Tarefa 5', score: 0 }, { name: 'Tarefa 6', score: 0 }, { name: 'Tarefa 7', score: 15 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 0 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 10 }], totalScore: 85 },
-  { name: 'GALVAO', pokemon: 'blastoise', type: 'water', tasks: [{ name: 'Tarefa 1', score: 0 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 0 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 10 }, { name: 'Tarefa 7', score: 20 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 90 }], totalScore: 220 },
-  { name: 'GABRIEL DA TRUFA', pokemon: 'squirtle', type: 'water', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 0 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 0 }, { name: 'Tarefa 7', score: 10 }, { name: 'Tarefa 8', score: 10 }, { name: 'Tarefa 9', score: 10 }, { name: 'Tarefa 10', score: 10 }, { name: 'Tarefa 11', score: 20 }], totalScore: 90 },
-  { name: 'JONATHA', pokemon: 'blastoise', type: 'water', tasks: [{ name: 'Tarefa 1', score: 5 }, { name: 'Tarefa 2', score: 10 }, { name: 'Tarefa 3', score: 5 }, { name: 'Tarefa 4', score: 10 }, { name: 'Tarefa 5', score: 10 }, { name: 'Tarefa 6', score: 15 }, { name: 'Tarefa 7', score: 50 }, { name: 'Tarefa 8', score: 20 }, { name: 'Tarefa 9', score: 30 }, { name: 'Tarefa 10', score: 20 }, { name: 'Tarefa 11', score: 70 }], totalScore: 245 },
+  mkStudent('MIGUEL',           'charizard',  'fire',  [0, 10, 5, 10, 10, 15, 40, 20, 40, 20, 100]),
+  mkStudent('HELLEN',           'blastoise',  'water', [5, 10, 5, 10, 10, 15, 40, 20, 30, 20, 70]),
+  mkStudent('CHICO',            'wartortle',   'water', [5, 5, 5, 5, 5, 5, 15, 10, 20, 20, 100]),
+  mkStudent('LORENA',           'venusaur',   'grass', [5, 10, 5, 10, 10, 15, 30, 20, 30, 20, 90]),
+  mkStudent('ADONES',           'venusaur',   'grass', [5, 10, 5, 10, 10, 15, 30, 20, 25, 20, 100]),
+  mkStudent('CARLOS',           'venusaur',   'grass', [5, 10, 5, 10, 10, 10, 40, 20, 25, 20, 70]),
+  mkStudent('GABRIEL MACHADO',  'venusaur',   'grass', [5, 10, 5, 10, 10, 15, 30, 20, 30, 16, 70]),
+  mkStudent('MATHEUS',          'charizard',  'fire',  [5, 10, 5, 10, 10, 10, 30, 20, 40, 20, 70]),
+  mkStudent('PREFEITO',         'charmander', 'fire',  [5, 10, 5, 0, 0, 10, 10, 10, 10, 20, 10]),
+  mkStudent('GDIAS',            'charizard',  'fire',  [5, 10, 5, 10, 10, 15, 30, 20, 40, 20, 80]),
+  mkStudent('BAGGIO',           'charmeleon', 'fire',  [5, 10, 5, 10, 10, 10, 20, 20, 30, 20, 50]),
+  mkStudent('EVANDERSON',       'blastoise',  'water', [5, 10, 5, 10, 10, 5, 40, 20, 30, 18, 95]),
+  mkStudent('YURI',             'charizard',  'fire',  [5, 10, 5, 10, 10, 15, 30, 20, 30, 20, 90]),
+  mkStudent('K1',               'charmander', 'water', [5, 10, 5, 10, 10, 15, 30, 20, 30, 20, 95]),
+  mkStudent('BOLA',             'ivysaur',    'grass', [5, 10, 5, 10, 10, 5, 30, 20, 20, 20, 35]),
+  mkStudent('HELENA',           'venusaur',   'grass', [5, 10, 5, 10, 10, 10, 40, 20, 30, 20, 70]),
+  mkStudent('KAIOBA',           'bulbasaur',  'grass', [5, 10, 5, 0, 0, 0, 15, 20, 0, 20, 10]),
+  mkStudent('GALVAO',           'blastoise',  'water', [0, 10, 0, 10, 10, 10, 20, 20, 30, 20, 90]),
+  mkStudent('GABRIEL DA TRUFA', 'squirtle',   'water', [5, 10, 5, 0, 10, 0, 10, 10, 10, 10, 20]),
+  mkStudent('JONATHA',          'blastoise',  'water', [5, 10, 5, 10, 10, 15, 50, 20, 30, 20, 70]),
 ];
