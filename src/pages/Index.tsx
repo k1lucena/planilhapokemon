@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useStudentData } from '@/hooks/useStudentData';
 import { usePokemonData } from '@/hooks/usePokemonData';
 import { Student } from '@/lib/types';
+import { RefreshCw } from 'lucide-react';
 import { Podium } from '@/components/Podium';
 import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
