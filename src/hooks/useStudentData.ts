@@ -412,14 +412,14 @@ export function useStudentData() {
   const importFromSheet = useCallback(async (sheetUrl: string) => {
     setIsLoading(true);
     try {
-      const sheetId = extractSheetId(sheetUrl);
-      if (!sheetId) {
-        toast.error('URL inválida. Cole o link da planilha do Google Sheets.');
+      const csvUrl = buildSheetCsvUrl(sheetUrl);
+      if (!csvUrl) {
+        toast.error('URL inválida. Cole o link da planilha do Google Sheets (publicada na web).');
         setIsLoading(false);
         return;
       }
 
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
+      console.log('[Sheets] URL normalizada:', csvUrl);
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', {
         body: { url: csvUrl },
@@ -428,10 +428,11 @@ export function useStudentData() {
       if (fnError) throw new Error(fnError.message || 'Erro na edge function');
 
       const text = typeof fnData === 'string' ? fnData : JSON.stringify(fnData);
+      console.log('[Sheets] Primeiras 500 chars:', text.substring(0, 500));
       const parsed = parseCsvData(text);
 
       if (parsed.length === 0) {
-        toast.error('Nenhum aluno encontrado. Verifique se a planilha está publicada na web e possui uma coluna "Nome".');
+        toast.error('Nenhum aluno encontrado. Verifique se a planilha está "Publicada na Web" (Arquivo → Compartilhar → Publicar na Web) e possui uma coluna "NOME".');
         setIsLoading(false);
         return;
       }
@@ -441,7 +442,7 @@ export function useStudentData() {
       toast.success(`${parsed.length} alunos importados do Google Sheets!`);
     } catch (e: any) {
       console.error('Falha ao importar do Sheets:', e);
-      toast.error(`Falha ao importar do Google Sheets: ${e.message || 'erro desconhecido'}`);
+      toast.error(`Falha ao importar: ${e.message || 'erro desconhecido'}. Verifique se a planilha está publicada na web.`);
     }
     setIsLoading(false);
   }, []);

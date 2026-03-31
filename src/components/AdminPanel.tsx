@@ -129,7 +129,7 @@ export function AdminPanel({
                     A planilha deve estar publicada na web (Arquivo → Compartilhar → Publicar na Web)
                   </p>
                   <Button
-                    onClick={() => { onImportSheet(sheetUrl); setSheetUrl(''); }}
+                    onClick={() => { onImportSheet(sheetUrl); }}
                     disabled={isLoading || !sheetUrl.trim()}
                     variant="outline"
                     className="w-full gap-2"
