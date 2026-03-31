@@ -325,7 +325,7 @@ export function useStudentData() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [evolutionEvent, setEvolutionEvent] = useState<EvolutionEvent | null>(null);
+  const [evolutionQueue, setEvolutionQueue] = useState<EvolutionEvent[]>([]);
   const studentsRef = useRef<Student[]>([]);
 
   useEffect(() => { studentsRef.current = students; }, [students]);
