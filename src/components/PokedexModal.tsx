@@ -22,10 +22,6 @@ export function PokedexModal({ student, pokemonData, open, onClose }: Props) {
   const stageLabels = ['Base', 'Evolução 1', 'Evolução Final'];
   const grades = calculateGrades(student.tasks);
 
-  const n1Tasks = student.tasks.slice(0, 5);
-  const n2Tasks = student.tasks.slice(5, 10);
-  const n3Task = student.tasks[10];
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-card border border-border">
@@ -101,61 +97,27 @@ export function PokedexModal({ student, pokemonData, open, onClose }: Props) {
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
-            {/* N1 Block */}
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className={`px-3 py-2 flex justify-between items-center ${getGradeBg(grades.nota1)}`}>
-                <span className="text-sm font-bold">Nota 1</span>
-                <span className={`font-bold ${getGradeColor(grades.nota1)}`}>{grades.nota1}</span>
-              </div>
-              <div className="p-2 space-y-1">
-                {n1Tasks.map((task, i) => (
-                  <div key={i} className="flex justify-between px-2 py-1.5 rounded bg-muted/30 text-sm">
-                    <span className="text-muted-foreground">{task.name}</span>
-                    <span className="font-bold">{task.score}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* N2 Block */}
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className={`px-3 py-2 flex justify-between items-center ${getGradeBg(grades.nota2)}`}>
-                <span className="text-sm font-bold">Nota 2</span>
-                <span className={`font-bold ${getGradeColor(grades.nota2)}`}>{grades.nota2}</span>
-              </div>
-              <div className="p-2 space-y-1">
-                {n2Tasks.map((task, i) => (
-                  <div key={i} className="flex justify-between px-2 py-1.5 rounded bg-muted/30 text-sm">
-                    <span className="text-muted-foreground">{task.name}</span>
-                    <span className="font-bold">{task.score}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* N3 Block */}
-            {n3Task && (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className={`px-3 py-2 flex justify-between items-center ${getGradeBg(grades.nota3)}`}>
-                  <span className="text-sm font-bold">Nota 3</span>
-                  <span className={`font-bold ${getGradeColor(grades.nota3)}`}>{grades.nota3}</span>
-                </div>
-                <div className="p-2">
-                  <div className="flex justify-between px-2 py-1.5 rounded bg-muted/30 text-sm">
-                    <span className="text-muted-foreground">{n3Task.name}</span>
-                    <span className="font-bold">{n3Task.score}</span>
-                  </div>
+            {/* N1, N2, N3 blocks */}
+            {[
+              { label: 'Nota 1 (Soma 1)', value: grades.nota1 },
+              { label: 'Nota 2 (Soma 2)', value: grades.nota2 },
+              { label: 'Nota 3 (Trabalho Final)', value: grades.nota3 },
+            ].map(g => (
+              <div key={g.label} className="rounded-lg border border-border overflow-hidden">
+                <div className={`px-3 py-2 flex justify-between items-center ${getGradeBg(g.value)}`}>
+                  <span className="text-sm font-bold">{g.label}</span>
+                  <span className={`font-bold ${getGradeColor(g.value)}`}>{g.value}</span>
                 </div>
               </div>
-            )}
+            ))}
 
             {/* Summary */}
             <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
               {[
-                { label: 'Nota 1', value: grades.nota1 },
-                { label: 'Nota 2', value: grades.nota2 },
-                { label: 'Nota 3', value: grades.nota3 },
-                { label: 'Média', value: grades.media },
+                { label: 'N1', value: grades.nota1 },
+                { label: 'N2', value: grades.nota2 },
+                { label: 'N3', value: grades.nota3 },
+                { label: 'Total', value: grades.media },
               ].map(g => (
                 <div key={g.label} className={`text-center p-2 rounded-lg border ${getGradeBg(g.value)}`}>
                   <p className="text-xs text-muted-foreground">{g.label}</p>

@@ -71,29 +71,20 @@ function parseSheetData(text: string): Student[] {
     );
     if (nameIdx === -1) return [];
 
-    const taskIndices: number[] = [];
-    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(i => i >= 0));
-    for (let i = 0; i < headers.length; i++) {
-      if (isSkipColumn(headers[i])) skipIndices.add(i);
-    }
-
-    for (let i = 0; i < headers.length; i++) {
-      if (skipIndices.has(i)) continue;
-      if (headers[i] && isTaskColumn(headers[i])) {
-        taskIndices.push(i);
-      }
-    }
-    if (taskIndices.length === 0) {
-      console.warn('[Sheets] Nenhuma coluna "Atividade" encontrada.');
-    }
+    const gradeColumns = findGradeColumns(headers);
+    console.log('[Sheets] Colunas de nota detectadas:', gradeColumns);
 
     return rows
       .filter((row: any) => row.c && row.c[nameIdx]?.v)
       .map((row: any) => {
-        const tasks = taskIndices.map((idx, i) => ({
-          name: headers[idx] || `Tarefa ${i + 1}`,
-          score: Number(row.c[idx]?.v) || 0,
+        const tasks = gradeColumns.map(gc => ({
+          name: gc.label,
+          score: Number(row.c[gc.index]?.v) || 0,
         }));
+        // Ensure all 3 grades exist
+        for (const label of ['N1', 'N2', 'N3']) {
+          if (!tasks.find(t => t.name === label)) tasks.push({ name: label, score: 0 });
+        }
         const pokemon = pokemonIdx >= 0 ? String(row.c[pokemonIdx]?.v || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
         const type = typeIdx >= 0 ? String(row.c[typeIdx]?.v || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
@@ -122,16 +113,25 @@ function findHeaderAndSlice(text: string): string {
   return text;
 }
 
-const SKIP_PATTERNS = ['total', 'soma', 'média', 'media', 'nota', 'resultado', 'nota final', 'matricula', 'evoluc', 'evoluç'];
+// Colunas-alvo para extração direta de notas
+const GRADE_COLUMNS: Record<string, string> = {
+  'soma 1': 'N1',
+  'soma 2': 'N2',
+  'trabalho final': 'N3',
+};
 
-function isSkipColumn(name: string): boolean {
-  const l = name.toLowerCase().trim();
-  return SKIP_PATTERNS.some(p => l.includes(p));
-}
-
-function isTaskColumn(name: string): boolean {
-  const l = name.toLowerCase().trim();
-  return l.startsWith('atividade');
+function findGradeColumns(headers: string[]): { index: number; label: string }[] {
+  const result: { index: number; label: string }[] = [];
+  for (let i = 0; i < headers.length; i++) {
+    const h = headers[i].toLowerCase().trim();
+    for (const [pattern, label] of Object.entries(GRADE_COLUMNS)) {
+      if (h === pattern || h.includes(pattern)) {
+        result.push({ index: i, label });
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 function parseCsvData(text: string): Student[] {
@@ -161,26 +161,23 @@ function parseCsvData(text: string): Student[] {
       return [];
     }
 
-    const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
-    for (const f of (result.meta.fields || [])) {
-      if (isSkipColumn(f)) skipKeys.add(f);
-    }
+    const allFields = result.meta.fields || [];
+    const gradeKeys = findGradeColumns(allFields.map(f => f.toLowerCase().trim()))
+      .map(gc => ({ key: allFields[gc.index], label: gc.label }));
 
-    let taskKeys = (result.meta.fields || []).filter(f => {
-      if (skipKeys.has(f)) return false;
-      return isTaskColumn(f);
-    });
-
-    console.log('[CSV] Colunas de tarefa:', taskKeys);
-    console.log('[CSV] Colunas ignoradas:', [...skipKeys]);
+    console.log('[CSV] Colunas de nota:', gradeKeys);
 
     return (result.data as any[])
       .filter(row => row[nameKey] && String(row[nameKey]).trim() !== '')
       .map(row => {
-        const tasks = taskKeys.map((k, i) => ({
-          name: k.trim() || `Atividade ${String(i + 1).padStart(2, '0')}`,
-          score: Number(row[k]) || 0,
+        const tasks = gradeKeys.map(gk => ({
+          name: gk.label,
+          score: Number(row[gk.key]) || 0,
         }));
+        // Ensure all 3 grades exist
+        for (const label of ['N1', 'N2', 'N3']) {
+          if (!tasks.find(t => t.name === label)) tasks.push({ name: label, score: 0 });
+        }
         const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
         const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
