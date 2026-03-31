@@ -1,51 +1,38 @@
 
 
-## Importar Dados da Planilha
+## Corrigir Importação de Dados (Google Sheets + CSV)
 
-A planilha tem uma estrutura não-padrão (linhas vazias no topo, headers na 3ª linha, colunas extras após os dados). Vou extrair os dados diretamente e atualizar o `MOCK_STUDENTS` com os 20 alunos reais, e também limpar/re-seedar o banco.
+Existem **dois problemas** distintos:
 
-### Dados extraídos da planilha
+### 1. Erro de deploy (aws s3 cp exit 127)
+Problema de infraestrutura do Lovable, não do código. Vai resolver sozinho ao tentar publicar novamente.
 
-20 alunos com 11 tarefas cada (colunas de pontuação D-N), pokémon atual na coluna C e pokémon inicial na coluna P. Vou usar o **pokémon inicial** (Poke_INICIAL) como base para o tipo, já que é o starter (Charmander→fire, Squirtle→water, Bulbasaur→grass), e o **pokémon atual** (coluna C) como o campo `pokemon`.
+### 2. Erro na importação — parsing incompatível com a estrutura da planilha
 
-### Plano
+A planilha usa colunas como `NOME`, `POKEMON_INICIAL`, `ATIVIDADE_01_APRESENTACAO`, `PROJETO_FINAL`, `TOTAL`, `SOMA_01`, `NOTA1`, etc. O parser atual não reconhece esses nomes:
 
-**1. Atualizar `src/lib/mockData.ts`**
-Substituir os 15 alunos fictícios pelos 20 alunos reais da planilha com suas 11 tarefas (Tarefa 1-11) e pontuações exatas.
+- **Pokémon**: busca por "pokemon" → `POKEMON_INICIAL` contém "pokemon" ✓
+- **Nome**: busca por "nome" → `NOME` contém "nome" ✓  
+- **Tarefas**: busca por "tarefa" ou "task" → mas as colunas são `ATIVIDADE_*` e `PROJETO_FINAL` ✗
+- **Colunas extras**: `MATRICULA`, `SOMA_01`, `NOTA1`, `SOMA_02`, `NOTA2`, `NOTA3` seriam incorretamente tratadas como tarefas no fallback
 
-**2. Forçar re-seed no banco**
-Ao carregar, o `useStudentData` já verifica se há dados no banco. Para forçar a atualização, vou adicionar uma lógica simples: ao detectar que o `MOCK_STUDENTS` mudou (checando pelo primeiro nome), apagar e re-seedar. Alternativamente, o usuário pode clicar "Resetar para Demo" no painel admin para carregar os novos dados.
+### Correções no `src/hooks/useStudentData.ts`
 
-### Alunos a importar
+**A. Atualizar detecção de tarefas** no `parseCsvData` e `parseSheetData`:
+- Adicionar "atividade" e "projeto" como palavras-chave para colunas de tarefa
+- Adicionar "matricula" à lista de colunas ignoradas (skipKeys)
+- Adicionar "soma" e "nota" à lista de colunas ignoradas (não são tarefas, são cálculos)
 
-| Nome | Pokémon | Tipo | Total |
-|---|---|---|---|
-| MIGUEL | charizard | fire | 270 |
-| HELLEN | blastoise | water | 235 |
-| CHICO | wartortle | water | 195 |
-| LORENA | venusaur | grass | 245 |
-| ADONES | venusaur | grass | 250 |
-| CARLOS | venusaur | grass | 225 |
-| GABRIEL MACHADO | venusaur | grass | 221 |
-| MATHEUS | charizard | fire | 230 |
-| PREFEITO | charmander | fire | 90 |
-| GDIAS | charizard | fire | 245 |
-| BAGGIO | charmeleon | fire | 190 |
-| EVANDERSON | blastoise | water | 248 |
-| YURI | charizard | fire | 245 |
-| K1 | charmander | water | 250 |
-| BOLA | ivysaur | grass | 170 |
-| HELENA | venusaur | grass | 230 |
-| KAIOBA | bulbasaur | grass | 85 |
-| GALVAO | blastoise | water | 220 |
-| GABRIEL DA TRUFA | squirtle | water | 90 |
-| JONATHA | blastoise | water | 245 |
+**B. Melhorar a lógica de skip** para excluir colunas calculadas:
+- Ignorar colunas que contenham: `total`, `soma`, `nota`, `matricula`
 
-### Arquivos modificados
+**C. Redesenhar edge function** — verificar se está deployada. Se a edge function `import-sheet` não estiver acessível, re-deployar.
+
+### Mudanças específicas
 
 | Arquivo | Mudança |
 |---|---|
-| `src/lib/mockData.ts` | Substituir dados fictícios pelos 20 alunos reais |
-
-Após o deploy, basta clicar em **"Resetar para Demo"** no painel admin para carregar os dados reais no banco.
+| `src/hooks/useStudentData.ts` | Atualizar `parseCsvData`: adicionar "atividade", "projeto" como task keywords; adicionar "matricula", "soma", "nota" como skip keywords |
+| `src/hooks/useStudentData.ts` | Atualizar `parseSheetData`: mesmas mudanças de detecção |
+| Edge function `import-sheet` | Re-deployar para garantir que está acessível |
 
