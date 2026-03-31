@@ -49,9 +49,8 @@ const Index = () => {
             <PokeballIcon size={36} className="animate-float" />
             <div>
               <h1 className="font-pixel text-sm md:text-lg tracking-wider text-white drop-shadow-md">
-                Pokédex Arena
+                Pokédex
               </h1>
-              <p className="text-xs text-white/70 mt-0.5">Sistema de Batalha e Evolução</p>
             </div>
           </div>
 
@@ -98,7 +97,7 @@ const Index = () => {
       </main>
 
       <footer className="border-t border-border bg-card/50 text-center py-4 mt-12">
-        <p className="font-pixel text-xs text-muted-foreground">Pokédex Arena © {new Date().getFullYear()}</p>
+        <p className="font-pixel text-xs text-muted-foreground">Pokédex © {new Date().getFullYear()}</p>
       </footer>
 
       <PokedexModal
