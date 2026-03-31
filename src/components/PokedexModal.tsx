@@ -25,11 +25,19 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto border border-border bg-card">
-        <DialogHeader>
-          <DialogTitle className="font-pixel text-center text-primary text-sm">
-            📖 POKÉDEX
-          </DialogTitle>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto border-2 border-[hsl(var(--pokedex-red)/0.4)] bg-card overflow-hidden">
+        <DialogHeader className="pokedex-modal-header pb-3 pt-2 -mx-6 -mt-6 px-6 pt-6 mb-2">
+          <div className="flex items-center justify-center gap-3">
+            <div className="pokedex-lens" style={{ width: 24, height: 24 }} />
+            <DialogTitle className="font-pixel text-center text-primary text-sm">
+              📖 POKÉDEX
+            </DialogTitle>
+            <div className="flex gap-1">
+              <div className="pokedex-led pokedex-led-red" style={{ width: 7, height: 7 }} />
+              <div className="pokedex-led pokedex-led-yellow" style={{ width: 7, height: 7 }} />
+              <div className="pokedex-led pokedex-led-green" style={{ width: 7, height: 7 }} />
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="text-center">
