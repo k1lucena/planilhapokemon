@@ -228,7 +228,7 @@ function parseSheetData(text: string): Student[] {
         return {
           name: String(row.c[nameIdx]?.v || '').trim(),
           pokemon,
-          type: type || inferPokemonType(pokemon),
+          type,
           tasks,
           totalScore: tasks.reduce((sum, task) => sum + task.score, 0),
           ...notas,
