@@ -84,9 +84,7 @@ function parseSheetData(text: string): Student[] {
       }
     }
     if (taskIndices.length === 0) {
-      for (let i = 0; i < headers.length; i++) {
-        if (!skipIndices.has(i) && headers[i]) taskIndices.push(i);
-      }
+      console.warn('[Sheets] Nenhuma coluna "Atividade" encontrada.');
     }
 
     return rows
@@ -124,8 +122,7 @@ function findHeaderAndSlice(text: string): string {
   return text;
 }
 
-const SKIP_PATTERNS = ['total', 'soma', 'nota', 'matricula', 'evoluc', 'evoluç'];
-const TASK_KEYWORDS = ['tarefa', 'task', 'atividade', 'projeto'];
+const SKIP_PATTERNS = ['total', 'soma', 'média', 'media', 'nota', 'resultado', 'nota final', 'matricula', 'evoluc', 'evoluç'];
 
 function isSkipColumn(name: string): boolean {
   const l = name.toLowerCase().trim();
@@ -134,7 +131,7 @@ function isSkipColumn(name: string): boolean {
 
 function isTaskColumn(name: string): boolean {
   const l = name.toLowerCase().trim();
-  return TASK_KEYWORDS.some(k => l.includes(k));
+  return l.startsWith('atividade');
 }
 
 function parseCsvData(text: string): Student[] {
@@ -169,15 +166,10 @@ function parseCsvData(text: string): Student[] {
       if (isSkipColumn(f)) skipKeys.add(f);
     }
 
-    // First try explicit task keywords
     let taskKeys = (result.meta.fields || []).filter(f => {
       if (skipKeys.has(f)) return false;
       return isTaskColumn(f);
     });
-    // Fallback: use remaining non-skip numeric-looking columns
-    if (taskKeys.length === 0) {
-      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f) && f.trim() !== '');
-    }
 
     console.log('[CSV] Colunas de tarefa:', taskKeys);
     console.log('[CSV] Colunas ignoradas:', [...skipKeys]);
