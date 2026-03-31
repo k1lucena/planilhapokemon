@@ -32,19 +32,34 @@ const Index = () => {
 
   return (
     <div className="min-h-screen game-bg">
-      <header className="border-b border-border bg-card/80 backdrop-blur-md py-5 px-4 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-center md:text-left">
-            <h1 className="font-pixel text-lg md:text-2xl tracking-wider text-primary">
-              ⚔️ Pokédex Arena
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1">Sistema de Batalha e Evolução</p>
+      <header className="pokedex-header sticky top-0 z-50 py-4 px-4 shadow-lg">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* Lente azul da Pokédex */}
+            <div className="pokedex-lens hidden sm:block" />
+            {/* LEDs decorativos */}
+            <div className="flex gap-1.5 hidden sm:flex">
+              <div className="pokedex-led pokedex-led-red" />
+              <div className="pokedex-led pokedex-led-yellow" />
+              <div className="pokedex-led pokedex-led-green" />
+            </div>
           </div>
+
+          <div className="flex items-center gap-3 text-center">
+            <PokeballIcon size={36} className="animate-float" />
+            <div>
+              <h1 className="font-pixel text-sm md:text-lg tracking-wider text-white drop-shadow-md">
+                Pokédex Arena
+              </h1>
+              <p className="text-xs text-white/70 mt-0.5">Sistema de Batalha e Evolução</p>
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-white/60 hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
-            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
+            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1 bg-white/10 border-white/20 text-white hover:bg-white/20">
               <Settings className="h-3 w-3" />
               Gerenciar
             </Button>

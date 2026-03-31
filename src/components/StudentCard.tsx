@@ -36,7 +36,7 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
 
   return (
     <div
-      className={`glass-card rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 border ${glowClass} overflow-hidden animate-fade-in`}
+      className={`glass-card pokedex-card rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 ${glowClass} overflow-hidden animate-fade-in`}
       onClick={onClick}
     >
       <div className="p-4 flex flex-col items-center text-center">
