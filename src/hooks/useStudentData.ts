@@ -466,7 +466,9 @@ export function useStudentData() {
   }, []);
 
   const refreshFromSheet = useCallback(async () => {
-    await fetchStudents();
+    const minDelay = new Promise(resolve => setTimeout(resolve, 400));
+    await Promise.all([fetchStudents(), minDelay]);
+    toast.success('Dados atualizados!');
   }, [fetchStudents]);
 
   const resetToMock = useCallback(async () => {
