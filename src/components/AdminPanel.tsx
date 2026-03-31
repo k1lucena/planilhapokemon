@@ -25,6 +25,7 @@ interface AdminPanelProps {
   onImportCsv: (file: File) => void;
   onImportJson: (file: File) => void;
   onReset: () => void;
+  onTriggerEvolution: (studentName: string) => void;
   isLoading: boolean;
 }
 
