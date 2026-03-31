@@ -92,17 +92,22 @@ export interface StudentGrades {
 }
 
 export function calculateGrades(tasks: StudentTask[]): StudentGrades {
-  const n1 = tasks.find(t => t.name === 'N1')?.score ?? 0;
-  const n2 = tasks.find(t => t.name === 'N2')?.score ?? 0;
-  const n3 = tasks.find(t => t.name === 'N3')?.score ?? 0;
-  const total = n1 + n2 + n3;
-  return { nota1: +n1.toFixed(1), nota2: +n2.toFixed(1), nota3: +n3.toFixed(1), media: +total.toFixed(1) };
+  const scores = tasks.map(t => t.score);
+  const nota1 = scores.length >= 5 ? scores.slice(0, 5).reduce((a, b) => a + b, 0) / 5 : 0;
+  const nota2 = scores.length >= 10 ? scores.slice(5, 10).reduce((a, b) => a + b, 0) / 5 : 0;
+  const nota3 = scores.length >= 11 ? scores[10] : 0;
+  const media = (nota1 + nota2 + nota3) / 3;
+  return { nota1: +nota1.toFixed(1), nota2: +nota2.toFixed(1), nota3: +nota3.toFixed(1), media: +media.toFixed(1) };
 }
 
 export function getGradeColor(grade: number): string {
-  return 'text-foreground';
+  if (grade >= 7) return 'text-emerald-400';
+  if (grade >= 5) return 'text-yellow-400';
+  return 'text-red-400';
 }
 
 export function getGradeBg(grade: number): string {
-  return 'bg-muted/50 border-border';
+  if (grade >= 7) return 'bg-emerald-500/15 border-emerald-500/30';
+  if (grade >= 5) return 'bg-yellow-500/15 border-yellow-500/30';
+  return 'bg-red-500/15 border-red-500/30';
 }

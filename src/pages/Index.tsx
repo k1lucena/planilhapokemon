@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useStudentData } from '@/hooks/useStudentData';
 import { usePokemonData } from '@/hooks/usePokemonData';
 import { Student } from '@/lib/types';
-import { RefreshCw, Settings } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Podium } from '@/components/Podium';
 import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
@@ -10,6 +10,7 @@ import { Rankings } from '@/components/Rankings';
 import { AdminPanel } from '@/components/AdminPanel';
 import { EvolutionAnimation } from '@/components/EvolutionAnimation';
 import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
 import { PokeballIcon } from '@/components/PokeballIcon';
 
 const Index = () => {
@@ -31,34 +32,24 @@ const Index = () => {
 
   return (
     <div className="min-h-screen game-bg">
-      {/* Pokédex Header */}
-      <header className="sticky top-0 z-50 pokedex-header">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-4 py-3">
+      <header className="sticky top-0 z-50 py-4 px-4 shadow-lg border-b border-border/50" style={{ background: 'linear-gradient(180deg, hsl(230 15% 10%) 0%, hsl(230 15% 8% / 0.95) 100%)', backdropFilter: 'blur(16px)' }}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            {/* Blue lens */}
-            <div className="pokedex-lens">
-              <div className="pokedex-lens-inner" />
-            </div>
-            {/* LEDs */}
-            <div className="flex gap-1.5">
-              <div className="pokedex-led pokedex-led--red" />
-              <div className="pokedex-led pokedex-led--yellow" />
-              <div className="pokedex-led pokedex-led--green" />
-            </div>
-            <h1 className="font-pixel text-[10px] md:text-xs tracking-wider text-white/90 ml-2">
-              Pokédex
+            <PokeballIcon size={32} className="animate-float" />
+            <h1 className="font-pixel text-xs md:text-sm tracking-wider text-foreground">
+              Pokédex Acadêmica
             </h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-white/50 hidden sm:inline">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
-            <Button variant="ghost" size="sm" onClick={refreshFromSheet} disabled={isLoading} className="gap-1 text-white/80 hover:text-white hover:bg-white/10 h-7 text-xs">
+            <Button variant="outline" size="sm" onClick={refreshFromSheet} disabled={isLoading} className="gap-1">
               <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Atualizar</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAdminOpen(true)} className="gap-1 text-white/80 hover:text-white hover:bg-white/10 h-7 text-xs">
+            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
               <Settings className="h-3 w-3" />
               <span className="hidden sm:inline">Gerenciar</span>
             </Button>
@@ -81,13 +72,12 @@ const Index = () => {
           </h2>
           <p className="text-center text-muted-foreground text-sm mb-6">Acompanhe o progresso de cada aluno</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {sorted.map((student, i) => (
+            {sorted.map(student => (
               <StudentCard
                 key={student.name}
                 student={student}
                 pokemonData={pokemonMap.get(student.pokemon)}
                 onClick={() => setSelectedStudent(student)}
-                index={i}
               />
             ))}
           </div>

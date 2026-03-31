@@ -36,9 +36,9 @@ export function PokedexModal({ student, pokemonData, open, onClose }: Props) {
             {typeLabel}
           </span>
           <p className="font-pixel text-2xl text-primary mt-2">{student.totalScore} pts</p>
-
+          
           {/* Grade summary */}
-          <div className="flex justify-center gap-3 mt-3">
+          <div className="flex justify-center gap-4 mt-3">
             {[
               { label: 'N1', value: grades.nota1 },
               { label: 'N2', value: grades.nota2 },
@@ -96,34 +96,28 @@ export function PokedexModal({ student, pokemonData, open, onClose }: Props) {
             </div>
           </TabsContent>
 
-          <TabsContent value="grades" className="space-y-4">
-            {/* N1, N2, N3 blocks */}
-            {[
-              { label: 'Nota 1 (Soma 1)', value: grades.nota1 },
-              { label: 'Nota 2 (Soma 2)', value: grades.nota2 },
-              { label: 'Nota 3 (Trabalho Final)', value: grades.nota3 },
-            ].map(g => (
-              <div key={g.label} className="rounded-lg border border-border overflow-hidden">
-                <div className={`px-3 py-2 flex justify-between items-center ${getGradeBg(g.value)}`}>
-                  <span className="text-sm font-bold">{g.label}</span>
-                  <span className={`font-bold ${getGradeColor(g.value)}`}>{g.value}</span>
-                </div>
-              </div>
-            ))}
-
-            {/* Summary */}
-            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
-              {[
-                { label: 'N1', value: grades.nota1 },
-                { label: 'N2', value: grades.nota2 },
-                { label: 'N3', value: grades.nota3 },
-                { label: 'Total', value: grades.media },
-              ].map(g => (
-                <div key={g.label} className={`text-center p-2 rounded-lg border ${getGradeBg(g.value)}`}>
-                  <p className="text-xs text-muted-foreground">{g.label}</p>
-                  <p className={`text-lg font-bold ${getGradeColor(g.value)}`}>{g.value}</p>
+          <TabsContent value="grades">
+            <div className="space-y-2">
+              {student.tasks.map((task, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="text-sm">{task.name}</span>
+                  <span className={`font-bold text-sm ${getGradeColor(task.score)}`}>{task.score}</span>
                 </div>
               ))}
+              <div className="border-t border-border my-2" />
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Nota 1', value: grades.nota1 },
+                  { label: 'Nota 2', value: grades.nota2 },
+                  { label: 'Nota 3', value: grades.nota3 },
+                  { label: 'Média', value: grades.media },
+                ].map(g => (
+                  <div key={g.label} className={`text-center p-2 rounded-lg border ${getGradeBg(g.value)}`}>
+                    <p className="text-xs text-muted-foreground">{g.label}</p>
+                    <p className={`text-lg font-bold ${getGradeColor(g.value)}`}>{g.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

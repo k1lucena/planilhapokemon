@@ -44,4 +44,6 @@ export const MOCK_STUDENTS: Student[] = [
   mkStudent('HELENA',           'venusaur',   'grass', [5, 10, 5, 10, 10, 10, 40, 20, 30, 20, 70]),
   mkStudent('KAIOBA',           'bulbasaur',  'grass', [5, 10, 5, 0, 0, 0, 15, 20, 0, 20, 10]),
   mkStudent('GALVAO',           'blastoise',  'water', [0, 10, 0, 10, 10, 10, 20, 20, 30, 20, 90]),
+  mkStudent('GABRIEL DA TRUFA', 'squirtle',   'water', [5, 10, 5, 0, 10, 0, 10, 10, 10, 10, 20]),
+  mkStudent('JONATHA',          'blastoise',  'water', [5, 10, 5, 10, 10, 15, 50, 20, 30, 20, 70]),
 ];

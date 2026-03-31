@@ -54,7 +54,7 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
           return (
             <div
               key={student.name}
-              className={`flex flex-col items-center cursor-pointer group animate-slide-up podium-item podium-pos-${pos}`}
+              className="flex flex-col items-center cursor-pointer group animate-slide-up"
               style={{ animationDelay: `${i * 0.15}s` }}
               onClick={() => onSelect(student)}
             >
@@ -85,9 +85,9 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
                 </span>
                 <p className="font-pixel text-xs mt-1 text-primary">{student.totalScore} pts</p>
                 <div className="flex gap-2 mt-1 justify-center text-xs">
-                  <span className="text-foreground">N1:{grades.nota1}</span>
-                  <span className="text-foreground">N2:{grades.nota2}</span>
-                  <span className="text-foreground">N3:{grades.nota3}</span>
+                  <span className={getGradeColor(grades.nota1)}>N1:{grades.nota1}</span>
+                  <span className={getGradeColor(grades.nota2)}>N2:{grades.nota2}</span>
+                  <span className={getGradeColor(grades.nota3)}>N3:{grades.nota3}</span>
                 </div>
               </div>
 

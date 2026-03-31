@@ -5,7 +5,6 @@ interface Props {
   student: Student;
   pokemonData?: PokemonData;
   onClick: () => void;
-  index?: number;
 }
 
 const GLOW_CLASSES: Record<string, string> = {
@@ -16,7 +15,7 @@ const GLOW_CLASSES: Record<string, string> = {
   ghost: 'glow-ghost', steel: 'glow-steel',
 };
 
-export function StudentCard({ student, pokemonData, onClick, index = 0 }: Props) {
+export function StudentCard({ student, pokemonData, onClick }: Props) {
   const stage = getEvolutionStage(student.totalScore);
   const { progress } = getProgressToNextEvolution(student.totalScore);
   const typeClass = TYPE_COLORS[student.type] || 'type-normal';
@@ -36,14 +35,17 @@ export function StudentCard({ student, pokemonData, onClick, index = 0 }: Props)
 
   return (
     <div
-      className={`glass-card rounded-xl cursor-pointer transition-all duration-500 hover:scale-105 hover:-translate-y-1 ${glowClass} overflow-hidden animate-fade-in student-card-hover`}
-      style={{ animationDelay: `${index * 0.08}s` }}
+      className={`glass-card rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 ${glowClass} overflow-hidden animate-fade-in`}
       onClick={onClick}
     >
       <div className="p-4 flex flex-col items-center text-center">
-        <div className="w-20 h-20 mb-2 relative">
+        <div className="w-20 h-20 mb-3 relative">
           {sprite ? (
-            <img src={sprite} alt={currentName} className="w-full h-full object-contain drop-shadow-md" />
+            <img
+              src={sprite}
+              alt={currentName}
+              className="w-full h-full object-contain drop-shadow-md"
+            />
           ) : (
             <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground">
               {initials}
@@ -59,22 +61,20 @@ export function StudentCard({ student, pokemonData, onClick, index = 0 }: Props)
 
         <p className="font-pixel text-sm text-primary mb-2">{student.totalScore} pts</p>
 
-        {/* Grades - 3 columns + total */}
-        <div className="w-full grid grid-cols-3 gap-1 mb-1 text-[10px]">
-          {[
-            { label: 'N1', value: grades.nota1 },
-            { label: 'N2', value: grades.nota2 },
-            { label: 'N3', value: grades.nota3 },
-          ].map(g => (
-            <div key={g.label} className="rounded bg-muted/50 py-1 px-0.5">
-              <span className="text-muted-foreground">{g.label}</span>
-              <p className="font-bold text-xs text-foreground">{g.value}</p>
-            </div>
-          ))}
-        </div>
-        <div className="w-full rounded bg-muted/50 py-1 px-0.5 text-[10px] mb-2">
-          <span className="text-muted-foreground">Total</span>
-          <p className="font-bold text-xs text-primary">{grades.media}</p>
+        {/* Grades */}
+        <div className="w-full grid grid-cols-3 gap-1 mb-2 text-xs">
+          <div className="rounded bg-muted/50 py-1">
+            <span className="text-muted-foreground">N1</span>
+            <p className={`font-bold ${getGradeColor(grades.nota1)}`}>{grades.nota1}</p>
+          </div>
+          <div className="rounded bg-muted/50 py-1">
+            <span className="text-muted-foreground">N2</span>
+            <p className={`font-bold ${getGradeColor(grades.nota2)}`}>{grades.nota2}</p>
+          </div>
+          <div className="rounded bg-muted/50 py-1">
+            <span className="text-muted-foreground">N3</span>
+            <p className={`font-bold ${getGradeColor(grades.nota3)}`}>{grades.nota3}</p>
+          </div>
         </div>
 
         <div className="w-full">

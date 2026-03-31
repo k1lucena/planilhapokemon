@@ -1,37 +1,49 @@
 
 
-## Extrair N1/N2/N3 diretamente das colunas "Soma 1", "Soma 2" e "Trabalho Final"
+## Substituir batalhas por notas + layout moderno
 
-### Mudança principal
+### Mudanças principais
 
-Em vez de importar atividades individuais e recalcular somas, o parser agora vai buscar **diretamente** os valores das colunas "Soma 1", "Soma 2" e "Trabalho Final" da planilha. Atividades individuais não serão importadas.
+**1. Remover sistema de batalhas**
+- Eliminar `src/lib/battleSystem.ts`
+- Remover todas as referências a `battleStats`, `generateBattleResults`, `PlayerBattleStats` de:
+  - `Index.tsx`, `Podium.tsx`, `StudentCard.tsx`, `Rankings.tsx`, `PokedexModal.tsx`
 
-### Modelo de dados
+**2. Calcular notas (NOTA1, NOTA2, NOTA3) a partir das tarefas**
+Baseado na estrutura da planilha, as notas são derivadas das atividades:
+- **NOTA1** = média das atividades 01-05 (índices 0-4)
+- **NOTA2** = média das atividades 06-10 (índices 5-9)
+- **NOTA3** = Projeto Final (índice 10)
 
-O array `tasks` de cada aluno passará a ter exatamente **3 itens fixos**:
-- `{ name: "N1", score: <valor de "Soma 1"> }`
-- `{ name: "N2", score: <valor de "Soma 2"> }`
-- `{ name: "N3", score: <valor de "Trabalho Final"> }`
+Criar um helper `calculateGrades(tasks)` em `src/lib/types.ts` que retorna `{ nota1, nota2, nota3, media }`.
 
-O `totalScore` = N1 + N2 + N3.
+**3. Redesenhar layout — visual moderno e limpo**
 
-### Arquivos a alterar
+| Componente | Antes | Depois |
+|---|---|---|
+| **Header** | Pokédex retrô com LEDs | Header limpo, gradiente sutil, sem LEDs |
+| **Podium** | Arena de batalha com V/D | Top 3 com notas e medalhas, sem referência a batalha |
+| **StudentCard** | Compacto com stats de batalha | Card glassmorphism com notas N1/N2/N3 visíveis, barra de progresso mais elegante |
+| **Rankings** | 3 tabs (Geral/Tipo/Batalhas) | 2 tabs (Geral/Por Tipo), coluna de notas visível |
+| **PokedexModal** | 3 tabs (Evolução/Tarefas/Batalhas) | 2 tabs (Evolução/Notas), tab Notas mostra tabela com todas atividades + N1/N2/N3/Média |
 
-| Arquivo | Mudança |
+**4. Arquivos a alterar**
+
+| Arquivo | Ação |
 |---|---|
-| `src/hooks/useStudentData.ts` | No `parseCsvData` e `parseSheetData`: buscar colunas "soma 1", "soma 2", "trabalho final" por nome. Ignorar colunas de atividade, média, total. Gerar 3 tasks fixas (N1/N2/N3). Também buscar coluna "matricula" opcionalmente. |
-| `src/lib/types.ts` | `calculateGrades`: ler diretamente os 3 tasks por nome (N1/N2/N3) em vez de fatiar por índice. Media = soma dos 3. |
-| `src/components/PokedexModal.tsx` | Remover lógica de `slice(0,5)`, `slice(5,10)`, `tasks[10]`. Usar `grades.nota1/nota2/nota3` diretamente. Simplificar a tab de notas para mostrar N1, N2, N3 sem listar atividades individuais. |
-| `src/components/AdminPanel.tsx` | Ajustar editor de notas rápidas para mostrar apenas 3 campos (N1, N2, N3) em vez de 11 atividades. |
+| `src/lib/battleSystem.ts` | Deletar |
+| `src/lib/types.ts` | Adicionar `calculateGrades()` |
+| `src/pages/Index.tsx` | Remover battleStats, passar grades |
+| `src/components/Podium.tsx` | Trocar V/D por notas, trocar "ARENA" por "TOP 3" |
+| `src/components/StudentCard.tsx` | Mostrar N1/N2/N3 no lugar de V/D |
+| `src/components/Rankings.tsx` | Remover tab Batalhas, adicionar colunas de notas |
+| `src/components/PokedexModal.tsx` | Trocar tab Batalhas por detalhamento de notas |
+| `src/index.css` | Ajustar cores/estilos para visual mais moderno (gradientes suaves, menos "pixel art") |
 
-### Lógica de detecção de colunas no CSV
-
-```text
-"Soma 1"         → N1
-"Soma 2"         → N2  
-"Trabalho Final" → N3
-"Matrícula"      → matricula (armazenado no nome ou ignorado)
-
-Ignorar: "Média", "Total", "Atividade *", qualquer outra coluna
-```
+**5. Estilo visual moderno**
+- Manter tema escuro mas com gradientes mais suaves
+- Reduzir uso de `font-pixel` (manter só em títulos principais)
+- Cards com backdrop-blur mais pronunciado e bordas sutis
+- Badges de tipo mais refinados
+- Notas com indicadores visuais de cor (verde ≥7, amarelo ≥5, vermelho <5)
 
