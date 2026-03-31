@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Pencil, UserPlus, RotateCcw, FileSpreadsheet, FileJson, FileText, Save } from 'lucide-react';
+import { Trash2, Pencil, UserPlus, RotateCcw, FileSpreadsheet, FileJson, FileText, Save, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AdminPanelProps {
@@ -25,6 +25,7 @@ interface AdminPanelProps {
   onImportCsv: (file: File) => void;
   onImportJson: (file: File) => void;
   onReset: () => void;
+  onTriggerEvolution: (studentName: string) => void;
   isLoading: boolean;
 }
 
@@ -32,7 +33,7 @@ export function AdminPanel({
   open, onClose, students,
   onAddStudent, onRemoveStudent, onUpdateStudent,
   onAddTask, onRemoveTask, onUpdateScore,
-  onImportSheet, onImportCsv, onImportJson, onReset, isLoading,
+  onImportSheet, onImportCsv, onImportJson, onReset, onTriggerEvolution, isLoading,
 }: AdminPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -162,6 +163,9 @@ export function AdminPanel({
                           <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                           <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {TYPE_LABELS[s.type] || s.type}</p>
                         </div>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-secondary hover:text-secondary" onClick={() => onTriggerEvolution(s.name)} title="Evoluir">
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </Button>
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingStudent(s)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>

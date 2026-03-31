@@ -20,6 +20,7 @@ const Index = () => {
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet,
     resetToMock, evolutionEvent, clearEvolutionEvent,
+    triggerEvolution,
   } = useStudentData();
 
   const pokemonNames = useMemo(() => students.map(s => s.pokemon), [students]);
@@ -101,6 +102,7 @@ const Index = () => {
         onImportCsv={importFromCsv}
         onImportJson={importFromJson}
         onReset={resetToMock}
+        onTriggerEvolution={triggerEvolution}
         isLoading={isLoading}
       />
 
