@@ -1,4 +1,4 @@
-import { Student, TYPE_COLORS } from '@/lib/types';
+import { Student, TYPE_COLORS, TYPE_LABELS } from '@/lib/types';
 import { PlayerBattleStats, getStatusEmoji } from '@/lib/battleSystem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -17,7 +17,6 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
     return (sb?.wins || 0) - (sa?.wins || 0);
   });
 
-  // Group by type
   const byType = new Map<string, Student[]>();
   students.forEach(s => {
     const list = byType.get(s.type) || [];
@@ -32,7 +31,7 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
   return (
     <section className="mt-12">
       <h2 className="font-pixel text-center text-lg md:text-2xl text-primary mb-2 tracking-wider">
-        📊 RANKINGS
+        📊 CLASSIFICAÇÃO
       </h2>
       <p className="text-center text-muted-foreground text-sm mb-6">Classificações e confrontos</p>
 
@@ -43,12 +42,12 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
           <TabsTrigger value="battles">Batalhas</TabsTrigger>
         </TabsList>
 
-        {/* General ranking */}
         <TabsContent value="general">
           <div className="space-y-2">
             {sorted.map((s, i) => {
               const typeClass = TYPE_COLORS[s.type] || 'type-normal';
               const stats = battleStats.get(s.name);
+              const typeLabel = TYPE_LABELS[s.type] || s.type;
               return (
                 <div
                   key={s.name}
@@ -61,7 +60,7 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{s.name}</p>
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${typeClass}`}>
-                      {s.type}
+                      {typeLabel}
                     </span>
                   </div>
                   {stats && (
@@ -76,16 +75,16 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
           </div>
         </TabsContent>
 
-        {/* Type ranking */}
         <TabsContent value="type">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {types.map(type => {
               const typeClass = TYPE_COLORS[type] || 'type-normal';
+              const typeLabel = TYPE_LABELS[type] || type;
               const list = byType.get(type)!;
               return (
                 <div key={type} className="glass-card rounded-xl overflow-hidden">
-                  <div className={`${typeClass} px-4 py-2 text-center font-bold capitalize text-sm`}>
-                    {type}
+                  <div className={`${typeClass} px-4 py-2 text-center font-bold text-sm`}>
+                    {typeLabel}
                   </div>
                   <div className="p-2 space-y-1">
                     {list.map((s, i) => (
@@ -108,12 +107,12 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
           </div>
         </TabsContent>
 
-        {/* Battle ranking */}
         <TabsContent value="battles">
           <div className="space-y-2">
             {sortedByWins.map((s, i) => {
               const stats = battleStats.get(s.name);
               const typeClass = TYPE_COLORS[s.type] || 'type-normal';
+              const typeLabel = TYPE_LABELS[s.type] || s.type;
               if (!stats) return null;
               return (
                 <div
@@ -127,7 +126,7 @@ export function Rankings({ students, battleStats, onSelect }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{s.name}</p>
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${typeClass}`}>
-                      {s.type}
+                      {typeLabel}
                     </span>
                   </div>
                   <div className="text-right">

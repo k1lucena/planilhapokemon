@@ -14,6 +14,7 @@ export interface Student {
 export interface PokemonEvolution {
   name: string;
   sprite: string;
+  animatedSprite?: string;
 }
 
 export interface PokemonData {
@@ -35,6 +36,27 @@ export function getProgressToNextEvolution(score: number): { progress: number; n
   return { progress: (score / 100) * 100, nextThreshold: 100, currentThreshold: 0 };
 }
 
+export const TYPE_LABELS: Record<string, string> = {
+  fire: 'Fogo',
+  water: 'Água',
+  grass: 'Planta',
+  electric: 'Elétrico',
+  psychic: 'Psíquico',
+  ice: 'Gelo',
+  dragon: 'Dragão',
+  dark: 'Sombrio',
+  fairy: 'Fada',
+  normal: 'Normal',
+  fighting: 'Lutador',
+  flying: 'Voador',
+  poison: 'Veneno',
+  ground: 'Terra',
+  rock: 'Pedra',
+  bug: 'Inseto',
+  ghost: 'Fantasma',
+  steel: 'Aço',
+};
+
 export const TYPE_COLORS: Record<string, string> = {
   fire: 'type-fire',
   water: 'type-water',
@@ -55,3 +77,9 @@ export const TYPE_COLORS: Record<string, string> = {
   ghost: 'type-ghost',
   steel: 'type-steel',
 };
+
+export const STARTER_POKEMON = [
+  { name: 'bulbasaur', type: 'grass', label: 'Bulbasaur' },
+  { name: 'charmander', type: 'fire', label: 'Charmander' },
+  { name: 'squirtle', type: 'water', label: 'Squirtle' },
+] as const;

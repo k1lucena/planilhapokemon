@@ -1,4 +1,4 @@
-import { Student, PokemonData, getEvolutionStage, getProgressToNextEvolution, TYPE_COLORS } from '@/lib/types';
+import { Student, PokemonData, getEvolutionStage, getProgressToNextEvolution, TYPE_COLORS, TYPE_LABELS } from '@/lib/types';
 import { PlayerBattleStats, getStatusEmoji, getStatusLabel } from '@/lib/battleSystem';
 import { Progress } from '@/components/ui/progress';
 
@@ -22,6 +22,7 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
   const { progress } = getProgressToNextEvolution(student.totalScore);
   const typeClass = TYPE_COLORS[student.type] || 'type-normal';
   const glowClass = GLOW_CLASSES[student.type] || '';
+  const typeLabel = TYPE_LABELS[student.type] || student.type;
 
   const sprite = pokemonData
     ? (pokemonData.evolutions[Math.min(stage, pokemonData.evolutions.length - 1)]?.sprite || pokemonData.sprite)
@@ -39,7 +40,6 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
       onClick={onClick}
     >
       <div className="p-4 flex flex-col items-center text-center">
-        {/* Status badge */}
         {battleStats && (
           <div className="self-end mb-1">
             <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
@@ -48,7 +48,6 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
           </div>
         )}
 
-        {/* Sprite */}
         <div className="w-24 h-24 mb-3 relative">
           {sprite ? (
             <img
@@ -63,14 +62,12 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
           )}
         </div>
 
-        {/* Info */}
         <h3 className="font-bold text-sm truncate w-full">{student.name}</h3>
         <p className="text-xs text-muted-foreground capitalize mb-1">{currentName}</p>
         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold mb-2 ${typeClass}`}>
-          {student.type}
+          {typeLabel}
         </span>
 
-        {/* Score & Battles */}
         <p className="font-pixel text-sm text-primary mb-1">{student.totalScore} pts</p>
         {battleStats && (
           <p className="text-xs text-muted-foreground mb-2">
@@ -78,7 +75,6 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
           </p>
         )}
 
-        {/* Progress */}
         <div className="w-full">
           <Progress value={progress} className="h-2" />
           {stage < 2 && (
@@ -87,7 +83,7 @@ export function StudentCard({ student, pokemonData, battleStats, onClick }: Prop
             </p>
           )}
           {stage >= 2 && (
-            <p className="text-xs text-secondary mt-1">⭐ MAX</p>
+            <p className="text-xs text-secondary mt-1">⭐ MÁX</p>
           )}
         </div>
       </div>

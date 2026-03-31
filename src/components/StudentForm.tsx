@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Student, TYPE_COLORS } from '@/lib/types';
+import { Student, STARTER_POKEMON, TYPE_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,21 +12,19 @@ interface StudentFormProps {
   existingNames?: string[];
 }
 
-const TYPES = Object.keys(TYPE_COLORS);
-
 export function StudentForm({ onSubmit, onCancel, initial, existingNames = [] }: StudentFormProps) {
   const [name, setName] = useState(initial?.name || '');
   const [pokemon, setPokemon] = useState(initial?.pokemon || '');
-  const [type, setType] = useState(initial?.type || 'normal');
   const [error, setError] = useState('');
+
+  const selectedStarter = STARTER_POKEMON.find(p => p.name === pokemon);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    const trimmedPokemon = pokemon.trim().toLowerCase();
 
     if (!trimmedName) { setError('Nome é obrigatório'); return; }
-    if (!trimmedPokemon) { setError('Pokémon é obrigatório'); return; }
+    if (!pokemon) { setError('Pokémon é obrigatório'); return; }
     if (trimmedName.length > 100) { setError('Nome muito longo'); return; }
     
     const isDuplicate = existingNames
@@ -34,7 +32,8 @@ export function StudentForm({ onSubmit, onCancel, initial, existingNames = [] }:
       .some(n => n.toLowerCase() === trimmedName.toLowerCase());
     if (isDuplicate) { setError('Já existe um aluno com este nome'); return; }
 
-    onSubmit({ name: trimmedName, pokemon: trimmedPokemon, type });
+    const starter = STARTER_POKEMON.find(p => p.name === pokemon);
+    onSubmit({ name: trimmedName, pokemon, type: starter?.type || 'normal' });
   };
 
   return (
@@ -51,28 +50,24 @@ export function StudentForm({ onSubmit, onCancel, initial, existingNames = [] }:
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="pokemon" className="text-foreground">Pokémon</Label>
-        <Input
-          id="pokemon"
-          value={pokemon}
-          onChange={e => { setPokemon(e.target.value); setError(''); }}
-          placeholder="Ex: charmander"
-          maxLength={50}
-          className="bg-muted/50 border-border"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label className="text-foreground">Tipo</Label>
-        <Select value={type} onValueChange={setType}>
+        <Label className="text-foreground">Pokémon Inicial</Label>
+        <Select value={pokemon} onValueChange={v => { setPokemon(v); setError(''); }}>
           <SelectTrigger className="bg-muted/50 border-border">
-            <SelectValue />
+            <SelectValue placeholder="Escolha um Pokémon" />
           </SelectTrigger>
           <SelectContent>
-            {TYPES.map(t => (
-              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+            {STARTER_POKEMON.map(p => (
+              <SelectItem key={p.name} value={p.name} className="capitalize">
+                {p.label} ({TYPE_LABELS[p.type]})
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {selectedStarter && (
+          <p className="text-xs text-muted-foreground">
+            Tipo: <span className="font-semibold">{TYPE_LABELS[selectedStarter.type]}</span>
+          </p>
+        )}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2 pt-2">
