@@ -72,10 +72,9 @@ function parseSheetData(text: string): Student[] {
     if (nameIdx === -1) return [];
 
     const taskIndices: number[] = [];
-    const skipCheckFns = [(h: string) => h.includes('total'), (h: string) => h.includes('soma'), (h: string) => h.includes('nota'), (h: string) => h.includes('matricula')];
     const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(i => i >= 0));
     for (let i = 0; i < headers.length; i++) {
-      if (skipCheckFns.some(fn => fn(headers[i]))) skipIndices.add(i);
+      if (isSkipColumn(headers[i])) skipIndices.add(i);
     }
 
     const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
