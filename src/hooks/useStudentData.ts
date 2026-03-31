@@ -469,6 +469,7 @@ export function useStudentData() {
     return () => clearInterval(interval);
   }, [refreshFromSheet]);
 
+  const importFromCsv = useCallback(async (file: File) => {
     setIsLoading(true);
     try {
       const text = await file.text();
