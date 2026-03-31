@@ -1,5 +1,5 @@
-import { Student, PokemonData, getEvolutionStage, TYPE_COLORS } from '@/lib/types';
-import { PlayerBattleStats, getStatusEmoji, getStatusLabel } from '@/lib/battleSystem';
+import { Student, PokemonData, getEvolutionStage, TYPE_COLORS, TYPE_LABELS } from '@/lib/types';
+import { PlayerBattleStats, getStatusEmoji } from '@/lib/battleSystem';
 
 interface Props {
   students: Student[];
@@ -23,12 +23,14 @@ export function Podium({ students, pokemonMap, battleStats, onSelect }: Props) {
   const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
   const positions = top3.length >= 3 ? [2, 1, 3] : top3.map((_, i) => i + 1);
 
-  function getSprite(student: Student) {
+  function getSprite(student: Student, animated = false) {
     const poke = pokemonMap.get(student.pokemon);
     if (!poke) return '';
     const stage = getEvolutionStage(student.totalScore);
     const idx = Math.min(stage, poke.evolutions.length - 1);
-    return poke.evolutions[idx]?.sprite || poke.sprite;
+    const evo = poke.evolutions[idx];
+    if (animated && evo?.animatedSprite) return evo.animatedSprite;
+    return evo?.sprite || poke.sprite;
   }
 
   const heights = ['', 'h-44', 'h-32', 'h-24'];
@@ -44,10 +46,12 @@ export function Podium({ students, pokemonMap, battleStats, onSelect }: Props) {
       <div className="flex items-end justify-center gap-4 md:gap-8">
         {order.map((student, i) => {
           const pos = positions[i];
-          const sprite = getSprite(student);
+          const animatedSprite = getSprite(student, true);
+          const staticSprite = getSprite(student, false);
           const typeClass = TYPE_COLORS[student.type] || 'type-normal';
           const glowClass = GLOW_CLASSES[student.type] || '';
           const stats = battleStats.get(student.name);
+          const typeLabel = TYPE_LABELS[student.type] || student.type;
 
           return (
             <div
@@ -62,11 +66,12 @@ export function Podium({ students, pokemonMap, battleStats, onSelect }: Props) {
                   <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-3xl">👑</div>
                 )}
                 <div className={`rounded-full p-2 border-2 ${glowClass} bg-card/50`}>
-                  {sprite ? (
+                  {(animatedSprite || staticSprite) ? (
                     <img
-                      src={sprite}
+                      src={animatedSprite || staticSprite}
                       alt={student.pokemon}
                       className={`${sizes[pos]} object-contain drop-shadow-lg transition-transform group-hover:scale-110`}
+                      style={{ imageRendering: animatedSprite ? 'pixelated' : 'auto' }}
                     />
                   ) : (
                     <div className={`${sizes[pos]} rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-muted-foreground`}>
@@ -80,7 +85,7 @@ export function Podium({ students, pokemonMap, battleStats, onSelect }: Props) {
               <div className="text-center mb-2">
                 <p className="font-bold text-sm md:text-base truncate max-w-[120px]">{student.name}</p>
                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold mt-1 ${typeClass}`}>
-                  {student.type}
+                  {typeLabel}
                 </span>
                 <p className="font-pixel text-xs mt-1 text-primary">{student.totalScore} pts</p>
                 {stats && (

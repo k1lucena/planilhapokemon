@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Student } from '@/lib/types';
+import { Student, TYPE_LABELS } from '@/lib/types';
 import { StudentForm } from './StudentForm';
 import { TaskManager } from './TaskManager';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -90,7 +90,7 @@ export function AdminPanel({
                       <div key={s.name} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2.5 border border-border">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {s.type} · {s.totalScore}pts</p>
+                          <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {TYPE_LABELS[s.type] || s.type} · {s.totalScore}pts</p>
                         </div>
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingStudent(s)}>
                           <Pencil className="h-3.5 w-3.5" />

@@ -1,4 +1,4 @@
-import { Student, PokemonData, getEvolutionStage, getProgressToNextEvolution, TYPE_COLORS } from '@/lib/types';
+import { Student, PokemonData, getEvolutionStage, getProgressToNextEvolution, TYPE_COLORS, TYPE_LABELS } from '@/lib/types';
 import { PlayerBattleStats, getStatusEmoji, getStatusLabel } from '@/lib/battleSystem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
@@ -19,6 +19,7 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
   const stage = getEvolutionStage(student.totalScore);
   const { progress, nextThreshold, currentThreshold } = getProgressToNextEvolution(student.totalScore);
   const typeClass = TYPE_COLORS[student.type] || 'type-normal';
+  const typeLabel = TYPE_LABELS[student.type] || student.type;
   const evolutions = pokemonData?.evolutions || [];
   const stageLabels = ['Base', 'Evolução 1', 'Evolução Final'];
 
@@ -31,11 +32,10 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
           </DialogTitle>
         </DialogHeader>
 
-        {/* Header */}
         <div className="text-center">
           <h3 className="text-xl font-bold">{student.name}</h3>
           <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold mt-1 ${typeClass}`}>
-            {student.type}
+            {typeLabel}
           </span>
           <p className="font-pixel text-2xl text-primary mt-2">{student.totalScore} pts</p>
           {battleStats && (
@@ -52,7 +52,6 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
             <TabsTrigger value="battles">Batalhas</TabsTrigger>
           </TabsList>
 
-          {/* Evolution tab */}
           <TabsContent value="evolution" className="space-y-4">
             <div className="flex items-center justify-center gap-2">
               {evolutions.map((evo, i) => {
@@ -76,7 +75,6 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
               })}
             </div>
 
-            {/* Progress */}
             <div>
               <h4 className="font-bold text-sm text-muted-foreground mb-2">Progresso</h4>
               <Progress value={progress} className="h-3" />
@@ -91,7 +89,6 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
             </div>
           </TabsContent>
 
-          {/* Tasks tab */}
           <TabsContent value="tasks">
             <div className="space-y-2">
               {student.tasks.map((task, i) => (
@@ -107,30 +104,32 @@ export function PokedexModal({ student, pokemonData, battleStats, open, onClose 
             </div>
           </TabsContent>
 
-          {/* Battles tab */}
           <TabsContent value="battles">
             {battleStats && battleStats.recentBattles.length > 0 ? (
               <div className="space-y-2">
-                {battleStats.recentBattles.map((b, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                      b.won ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'
-                    }`}
-                  >
-                    <div>
-                      <p className="text-sm font-semibold">vs {b.opponentName}</p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {b.opponentPokemon} ({b.opponentType})
-                        {b.hadAdvantage && ' • Vantagem de tipo!'}
-                        {b.hadDisadvantage && ' • Desvantagem de tipo'}
-                      </p>
+                {battleStats.recentBattles.map((b, i) => {
+                  const oppTypeLabel = TYPE_LABELS[b.opponentType] || b.opponentType;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        b.won ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'
+                      }`}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">vs {b.opponentName}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {b.opponentPokemon} ({oppTypeLabel})
+                          {b.hadAdvantage && ' • Vantagem de tipo!'}
+                          {b.hadDisadvantage && ' • Desvantagem de tipo'}
+                        </p>
+                      </div>
+                      <span className={`font-bold text-sm ${b.won ? 'text-green-400' : 'text-red-400'}`}>
+                        {b.won ? '✅ Vitória' : '❌ Derrota'}
+                      </span>
                     </div>
-                    <span className={`font-bold text-sm ${b.won ? 'text-green-400' : 'text-red-400'}`}>
-                      {b.won ? '✅ Vitória' : '❌ Derrota'}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-center text-muted-foreground text-sm py-4">Sem batalhas registradas</p>

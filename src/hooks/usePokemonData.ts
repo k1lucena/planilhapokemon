@@ -21,9 +21,11 @@ async function fetchEvolutionChain(pokemonName: string): Promise<PokemonEvolutio
       const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
       if (pokeRes.ok) {
         const pokeData = await pokeRes.json();
+        const animated = pokeData.sprites?.versions?.['generation-v']?.['black-white']?.animated?.front_default;
         evolutions.push({
           name,
           sprite: pokeData.sprites.other?.['official-artwork']?.front_default || pokeData.sprites.front_default || '',
+          animatedSprite: animated || '',
         });
       }
       current = current.evolves_to?.[0] || null;
@@ -59,12 +61,17 @@ export function usePokemonData(pokemonNames: string[]) {
             const data = await res.json();
 
             const evolutions = await fetchEvolutionChain(name);
+            const animated = data.sprites?.versions?.['generation-v']?.['black-white']?.animated?.front_default;
 
             const pokemonData: PokemonData = {
               id: data.id,
               name: data.name,
               sprite: data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default || '',
-              evolutions: evolutions.length > 0 ? evolutions : [{ name: data.name, sprite: data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default || '' }],
+              evolutions: evolutions.length > 0 ? evolutions : [{
+                name: data.name,
+                sprite: data.sprites.other?.['official-artwork']?.front_default || data.sprites.front_default || '',
+                animatedSprite: animated || '',
+              }],
             };
 
             cache.set(name, pokemonData);
@@ -76,7 +83,6 @@ export function usePokemonData(pokemonNames: string[]) {
       );
 
       if (!cancelled) {
-        // Also add cached entries
         for (const name of uniqueNames) {
           if (cache.has(name) && !newMap.has(name)) {
             newMap.set(name, cache.get(name)!);
