@@ -7,14 +7,22 @@ import { Podium } from '@/components/Podium';
 import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
 import { Rankings } from '@/components/Rankings';
+import { AdminPanel } from '@/components/AdminPanel';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 const Index = () => {
-  const { students, isLoading, lastUpdate, usingMock, refetch } = useStudentData(10000);
+  const {
+    students, isLoading, lastUpdate,
+    addStudent, removeStudent, updateStudent,
+    addTask, removeTask, updateTaskScore,
+    importFromSheet, resetToMock,
+  } = useStudentData();
+
   const pokemonNames = useMemo(() => students.map(s => s.pokemon), [students]);
   const { pokemonMap, isLoading: pokemonLoading } = usePokemonData(pokemonNames);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const sorted = useMemo(() => [...students].sort((a, b) => b.totalScore - a.totalScore), [students]);
   const battleStats = useMemo(() => generateBattleResults(students), [students]);
@@ -31,23 +39,17 @@ const Index = () => {
             <p className="text-xs text-muted-foreground mt-1">Sistema de Batalha e Evolução</p>
           </div>
           <div className="flex items-center gap-3">
-            {usingMock && (
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full font-bold">
-                Demo
-              </span>
-            )}
             <span className="text-xs text-muted-foreground">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
             <Button
               variant="outline"
               size="sm"
-              onClick={refetch}
-              disabled={isLoading}
+              onClick={() => setAdminOpen(true)}
               className="gap-1"
             >
-              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
-              Atualizar
+              <Settings className="h-3 w-3" />
+              Gerenciar
             </Button>
           </div>
         </div>
@@ -60,10 +62,8 @@ const Index = () => {
           </div>
         )}
 
-        {/* Arena / Podium */}
         <Podium students={sorted} pokemonMap={pokemonMap} battleStats={battleStats} onSelect={setSelectedStudent} />
 
-        {/* Cards Grid */}
         <section>
           <h2 className="font-pixel text-center text-lg md:text-xl text-primary mb-2 tracking-wider">
             🎮 JOGADORES
@@ -82,22 +82,34 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Rankings */}
         <Rankings students={students} battleStats={battleStats} onSelect={setSelectedStudent} />
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-card/50 text-center py-4 mt-12">
         <p className="font-pixel text-xs text-muted-foreground">Pokédex Arena © {new Date().getFullYear()}</p>
       </footer>
 
-      {/* Modal */}
       <PokedexModal
         student={selectedStudent}
         pokemonData={selectedStudent ? pokemonMap.get(selectedStudent.pokemon) : undefined}
         battleStats={selectedStudent ? battleStats.get(selectedStudent.name) : undefined}
         open={!!selectedStudent}
         onClose={() => setSelectedStudent(null)}
+      />
+
+      <AdminPanel
+        open={adminOpen}
+        onClose={() => setAdminOpen(false)}
+        students={students}
+        onAddStudent={addStudent}
+        onRemoveStudent={removeStudent}
+        onUpdateStudent={updateStudent}
+        onAddTask={addTask}
+        onRemoveTask={removeTask}
+        onUpdateScore={updateTaskScore}
+        onImportSheet={importFromSheet}
+        onReset={resetToMock}
+        isLoading={isLoading}
       />
     </div>
   );
