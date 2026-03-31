@@ -1,62 +1,55 @@
 
 
-## Painel de Gerenciamento Local (CRUD de Alunos e Tarefas)
+## Banco de Dados Supabase + Animação de Evolução + Importação Multi-formato
 
-### Visão Geral
-Adicionar um painel de administração dentro do app para criar, editar e excluir alunos e tarefas, usando **localStorage** como banco de dados local. O Google Sheets passa a ser apenas uma fonte de importação inicial opcional.
+### 1. Configurar Supabase
+- Conectar projeto Supabase externo ao Lovable
+- Criar tabela `students` com colunas: `id` (uuid, PK), `name` (text, unique), `pokemon` (text), `type` (text), `tasks` (jsonb), `total_score` (integer), `created_at` (timestamptz)
+- Habilitar RLS com política pública de leitura e escrita (sem auth, já que é um painel escolar)
 
-### Arquitetura de Dados
+### 2. Refatorar `useStudentData.ts`
+- Substituir localStorage por queries Supabase (`supabase.from('students')`)
+- CRUD completo: `select`, `insert`, `update`, `delete` direto no banco
+- Manter recálculo de `totalScore` antes de salvar
+- Remover toda lógica de localStorage
 
-- **localStorage** armazena os alunos como JSON (`pokedex-arena-students`)
-- Na primeira visita, carrega os dados mock como base inicial
-- Botão opcional "Importar do Sheets" para puxar dados da planilha uma vez
-- Todas as alterações (add/edit/delete aluno, add/edit tarefa) persistem no localStorage
+### 3. Importação Multi-formato (AdminPanel → aba Dados)
+- **Google Sheets**: manter lógica atual de importação via URL pública (já existe)
+- **CSV**: input de arquivo + parse com `Papa.parse` (papaparse) — detecta colunas Nome/Pokémon/Tipo/Tarefas
+- **JSON**: input de arquivo + `JSON.parse` — espera array de objetos `{name, pokemon, type, tasks}`
+- Todos os formatos inserem/atualizam no Supabase ao importar
+- UI: 3 botões na aba Dados (Sheets / CSV / JSON) com file input para CSV e JSON
 
-### Novos Componentes
-
-**1. `src/components/AdminPanel.tsx`** — Painel lateral (Sheet/Drawer) acessível por botão no header
-- Lista de alunos com opções de editar/excluir
-- Botão "Adicionar Aluno" abre formulário
-- Seção de gerenciamento de tarefas (adicionar nova tarefa para todos)
-- Botão "Importar do Sheets" (importação única)
-
-**2. `src/components/StudentForm.tsx`** — Formulário para adicionar/editar aluno
-- Campos: Nome, Pokémon (com autocomplete da PokéAPI), Tipo (select com tipos disponíveis)
-- Validação: nome obrigatório, pokémon obrigatório
-- Modo criação e edição
-
-**3. `src/components/TaskManager.tsx`** — Gerenciar tarefas/pontuações
-- Adicionar nova tarefa (nome + pontuação por aluno)
-- Editar pontuação de tarefas existentes por aluno
-- Excluir tarefa de todos os alunos
-
-### Modificações em Arquivos Existentes
-
-**`src/hooks/useStudentData.ts`** — Refatorar para:
-- Ler/escrever do localStorage como fonte principal
-- Expor funções: `addStudent`, `removeStudent`, `updateStudent`, `addTask`, `updateTaskScore`, `removeTask`, `importFromSheet`
-- Manter `refetch` apenas para importação manual do Sheets
-- Auto-recalcular `totalScore` ao modificar tarefas
-
-**`src/pages/Index.tsx`**:
-- Adicionar botão "Gerenciar" no header que abre o AdminPanel
-- Passar funções CRUD para o painel
-
-### Fluxo do Usuário
-
-1. App abre com dados mock no localStorage (primeira vez) ou dados salvos
-2. Clica em "Gerenciar" no header → abre painel lateral
-3. Pode adicionar aluno (nome, pokémon, tipo) → aparece no grid
-4. Pode excluir aluno → some do grid
-5. Pode adicionar tarefa → nova coluna de pontuação para todos
-6. Pode editar pontuação individual por aluno/tarefa
-7. Opcionalmente importa do Sheets uma vez para popular dados reais
+### 4. Animação de Evolução
+- Criar componente `EvolutionAnimation.tsx`: overlay fullscreen com sequência animada
+- Quando a pontuação de um aluno cruza 100 ou 200 pts (ao atualizar score):
+  - Detectar mudança de estágio comparando antes/depois
+  - Exibir animação: sprite antigo → flash de luz (scale + opacity) → sprite novo
+  - Texto "EVOLUIU!" com efeito de glow
+  - Duração ~2.5s, fecha automaticamente
+- Integrar no `Index.tsx`: state para controlar qual aluno está evoluindo
+- Hook `usePrevious` para comparar estágios anteriores
 
 ### Detalhes Técnicos
 
-- localStorage key: `pokedex-arena-students`
-- Validação com verificação de nome duplicado
-- Select de tipo com todas as 18 opções da `TYPE_COLORS`
-- Input de pokémon como texto livre (lowercase, trim)
-- totalScore sempre recalculado: `tasks.reduce((sum, t) => sum + t.score, 0)`
+**Tabela SQL:**
+```sql
+CREATE TABLE students (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text UNIQUE NOT NULL,
+  pokemon text NOT NULL,
+  type text NOT NULL DEFAULT 'normal',
+  tasks jsonb NOT NULL DEFAULT '[]',
+  total_score integer NOT NULL DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public access" ON students FOR ALL USING (true) WITH CHECK (true);
+```
+
+**Parsing CSV:** Usar papaparse para detectar headers automaticamente (mesma lógica de detecção de colunas do Sheets)
+
+**Arquivos a criar:** `src/components/EvolutionAnimation.tsx`
+**Arquivos a modificar:** `src/hooks/useStudentData.ts`, `src/components/AdminPanel.tsx`, `src/pages/Index.tsx`
+**Dependências a instalar:** `papaparse`, `@types/papaparse`
 
