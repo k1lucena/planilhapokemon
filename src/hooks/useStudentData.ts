@@ -161,26 +161,23 @@ function parseCsvData(text: string): Student[] {
       return [];
     }
 
-    const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
-    for (const f of (result.meta.fields || [])) {
-      if (isSkipColumn(f)) skipKeys.add(f);
-    }
+    const allFields = result.meta.fields || [];
+    const gradeKeys = findGradeColumns(allFields.map(f => f.toLowerCase().trim()))
+      .map(gc => ({ key: allFields[gc.index], label: gc.label }));
 
-    let taskKeys = (result.meta.fields || []).filter(f => {
-      if (skipKeys.has(f)) return false;
-      return isTaskColumn(f);
-    });
-
-    console.log('[CSV] Colunas de tarefa:', taskKeys);
-    console.log('[CSV] Colunas ignoradas:', [...skipKeys]);
+    console.log('[CSV] Colunas de nota:', gradeKeys);
 
     return (result.data as any[])
       .filter(row => row[nameKey] && String(row[nameKey]).trim() !== '')
       .map(row => {
-        const tasks = taskKeys.map((k, i) => ({
-          name: k.trim() || `Atividade ${String(i + 1).padStart(2, '0')}`,
-          score: Number(row[k]) || 0,
+        const tasks = gradeKeys.map(gk => ({
+          name: gk.label,
+          score: Number(row[gk.key]) || 0,
         }));
+        // Ensure all 3 grades exist
+        for (const label of ['N1', 'N2', 'N3']) {
+          if (!tasks.find(t => t.name === label)) tasks.push({ name: label, score: 0 });
+        }
         const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
         const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
