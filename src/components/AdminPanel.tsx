@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Student } from '@/lib/types';
+import { Student, TYPE_LABELS } from '@/lib/types';
 import { StudentForm } from './StudentForm';
 import { TaskManager } from './TaskManager';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
