@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Student } from '@/lib/types';
+import { Student, STARTER_POKEMON } from '@/lib/types';
 import { MOCK_STUDENTS } from '@/lib/mockData';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import Papa from 'papaparse';
 
 const SHEET_ID = '1Ym7XwuWa-Wm7zsbEsiKcQ6A3cvv9Z3UPby0O405k16g';
@@ -9,6 +10,11 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 
 function recalcTotal(student: Student): Student {
   return { ...student, totalScore: student.tasks.reduce((sum, t) => sum + t.score, 0) };
+}
+
+function inferPokemonType(pokemon: string): string {
+  const starter = STARTER_POKEMON.find(s => s.name.toLowerCase() === pokemon.toLowerCase());
+  return starter?.type || 'normal';
 }
 
 function parseSheetData(text: string): Student[] {
@@ -20,23 +26,32 @@ function parseSheetData(text: string): Student[] {
     if (!rows || rows.length === 0) return [];
 
     const headers: string[] = cols.map((col: any) => (col.label || '').toString().toLowerCase().trim());
-    const nameIdx = headers.findIndex((h: string) => h.includes('nome') || h.includes('aluno') || h.includes('name'));
-    const pokemonIdx = headers.findIndex((h: string) => h.includes('pokémon') || h.includes('pokemon'));
-    const typeIdx = headers.findIndex((h: string) => h.includes('tipo') || h.includes('type'));
-    if (nameIdx === -1 || pokemonIdx === -1) return [];
+    console.log('[Sheets] Colunas detectadas:', headers);
+
+    const nameIdx = headers.findIndex((h: string) =>
+      h.includes('nome') || h.includes('aluno') || h.includes('name') || h.includes('estudante')
+    );
+    const pokemonIdx = headers.findIndex((h: string) =>
+      h.includes('pokémon') || h.includes('pokemon')
+    );
+    const typeIdx = headers.findIndex((h: string) =>
+      h.includes('tipo') || h.includes('type')
+    );
+    if (nameIdx === -1) return [];
 
     const taskIndices: number[] = [];
     const totalIdx = headers.findIndex((h: string) => h.includes('total'));
+    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx, totalIdx].filter(i => i >= 0));
+
     for (let i = 0; i < headers.length; i++) {
-      if (i !== nameIdx && i !== pokemonIdx && i !== typeIdx && i !== totalIdx) {
-        if (headers[i] && (headers[i].includes('tarefa') || headers[i].includes('task') || /^\d+$/.test(headers[i]))) {
-          taskIndices.push(i);
-        }
+      if (skipIndices.has(i)) continue;
+      if (headers[i] && (headers[i].includes('tarefa') || headers[i].includes('task') || /^\d+$/.test(headers[i]))) {
+        taskIndices.push(i);
       }
     }
     if (taskIndices.length === 0) {
-      for (let i = Math.max(nameIdx, pokemonIdx, typeIdx) + 1; i < headers.length; i++) {
-        if (i !== totalIdx) taskIndices.push(i);
+      for (let i = 0; i < headers.length; i++) {
+        if (!skipIndices.has(i) && headers[i]) taskIndices.push(i);
       }
     }
 
@@ -47,16 +62,13 @@ function parseSheetData(text: string): Student[] {
           name: headers[idx] || `Tarefa ${i + 1}`,
           score: Number(row.c[idx]?.v) || 0,
         }));
+        const pokemon = pokemonIdx >= 0 ? String(row.c[pokemonIdx]?.v || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
+        const type = typeIdx >= 0 ? String(row.c[typeIdx]?.v || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
-        return {
-          name: String(row.c[nameIdx]?.v || ''),
-          pokemon: String(row.c[pokemonIdx]?.v || '').toLowerCase().trim(),
-          type: typeIdx >= 0 ? String(row.c[typeIdx]?.v || 'normal').toLowerCase().trim() : 'normal',
-          tasks,
-          totalScore,
-        };
+        return { name: String(row.c[nameIdx]?.v || ''), pokemon, type: type || inferPokemonType(pokemon), tasks, totalScore };
       });
-  } catch {
+  } catch (e) {
+    console.error('[Sheets] Erro ao parsear:', e);
     return [];
   }
 }
@@ -66,21 +78,25 @@ function parseCsvData(text: string): Student[] {
     const result = Papa.parse(text, { header: true, skipEmptyLines: true });
     if (!result.data || result.data.length === 0) return [];
     
-    const headers = result.meta.fields?.map(f => f.toLowerCase().trim()) || [];
+    console.log('[CSV] Colunas detectadas:', result.meta.fields);
+
     const nameKey = result.meta.fields?.find(f => {
-      const l = f.toLowerCase();
-      return l.includes('nome') || l.includes('aluno') || l.includes('name');
+      const l = f.toLowerCase().trim();
+      return l.includes('nome') || l.includes('aluno') || l.includes('name') || l.includes('estudante');
     });
     const pokemonKey = result.meta.fields?.find(f => {
-      const l = f.toLowerCase();
+      const l = f.toLowerCase().trim();
       return l.includes('pokémon') || l.includes('pokemon');
     });
     const typeKey = result.meta.fields?.find(f => {
-      const l = f.toLowerCase();
+      const l = f.toLowerCase().trim();
       return l.includes('tipo') || l.includes('type');
     });
 
-    if (!nameKey || !pokemonKey) return [];
+    if (!nameKey) {
+      console.error('[CSV] Coluna de nome não encontrada. Colunas:', result.meta.fields);
+      return [];
+    }
 
     const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
     const totalKey = result.meta.fields?.find(f => f.toLowerCase().includes('total'));
@@ -95,40 +111,58 @@ function parseCsvData(text: string): Student[] {
           name: k,
           score: Number(row[k]) || 0,
         }));
+        const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
+        const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
         return {
           name: String(row[nameKey]),
-          pokemon: String(row[pokemonKey] || '').toLowerCase().trim(),
-          type: typeKey ? String(row[typeKey] || 'normal').toLowerCase().trim() : 'normal',
+          pokemon,
+          type: type || inferPokemonType(pokemon),
           tasks,
           totalScore,
         };
       });
-  } catch {
+  } catch (e) {
+    console.error('[CSV] Erro ao parsear:', e);
     return [];
   }
 }
 
 function parseJsonData(text: string): Student[] {
   try {
-    const data = JSON.parse(text);
-    if (!Array.isArray(data)) return [];
+    let data = JSON.parse(text);
+
+    // Accept root object with array inside
+    if (!Array.isArray(data)) {
+      const arrayKey = Object.keys(data).find(k => Array.isArray(data[k]));
+      if (arrayKey) {
+        data = data[arrayKey];
+      } else {
+        return [];
+      }
+    }
+
     return data
-      .filter((d: any) => d.name && d.pokemon)
+      .filter((d: any) => d.name || d.nome)
       .map((d: any) => {
-        const tasks = Array.isArray(d.tasks) ? d.tasks.map((t: any) => ({
-          name: String(t.name || ''),
-          score: Number(t.score) || 0,
+        const name = String(d.name || d.nome || '');
+        const pokemon = String(d.pokemon || d.pokémon || d.Pokemon || 'bulbasaur').toLowerCase().trim();
+        const type = String(d.type || d.tipo || '').toLowerCase().trim() || inferPokemonType(pokemon);
+        const rawTasks = d.tasks || d.tarefas;
+        const tasks = Array.isArray(rawTasks) ? rawTasks.map((t: any) => ({
+          name: String(t.name || t.nome || ''),
+          score: Number(t.score || t.pontos || t.nota || 0),
         })) : [];
         return {
-          name: String(d.name),
-          pokemon: String(d.pokemon).toLowerCase().trim(),
-          type: String(d.type || 'normal').toLowerCase().trim(),
+          name,
+          pokemon,
+          type,
           tasks,
           totalScore: tasks.reduce((sum: number, t: any) => sum + t.score, 0),
         };
       });
-  } catch {
+  } catch (e) {
+    console.error('[JSON] Erro ao parsear:', e);
     return [];
   }
 }
@@ -172,12 +206,10 @@ export function useStudentData() {
   const [evolutionEvent, setEvolutionEvent] = useState<EvolutionEvent | null>(null);
   const studentsRef = useRef<Student[]>([]);
 
-  // Keep ref in sync
   useEffect(() => {
     studentsRef.current = students;
   }, [students]);
 
-  // Initial fetch
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -191,7 +223,6 @@ export function useStudentData() {
     } else if (data && data.length > 0) {
       setStudents(data.map(dbToStudent));
     } else {
-      // Empty DB — seed with mock data
       await upsertStudents(MOCK_STUDENTS);
     }
     setIsLoading(false);
@@ -301,38 +332,68 @@ export function useStudentData() {
   const importFromSheet = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(SHEET_URL, { cache: 'no-store' });
-      const text = await res.text();
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', {
+        body: { url: SHEET_URL },
+      });
+
+      if (fnError) throw new Error(fnError.message || 'Erro na edge function');
+
+      // fnData is the raw text from the sheet
+      const text = typeof fnData === 'string' ? fnData : JSON.stringify(fnData);
       const parsed = parseSheetData(text);
-      if (parsed.length > 0) {
-        // Clear existing and insert new
-        await supabase.from('students').delete().neq('name', '');
-        await upsertStudents(parsed);
+
+      if (parsed.length === 0) {
+        toast.error('Formato não reconhecido. Verifique as colunas da planilha.');
+        setIsLoading(false);
+        return;
       }
-    } catch {
-      console.warn('Falha ao importar do Sheets');
+
+      await supabase.from('students').delete().neq('name', '');
+      await upsertStudents(parsed);
+      toast.success(`${parsed.length} alunos importados do Google Sheets!`);
+    } catch (e: any) {
+      console.error('Falha ao importar do Sheets:', e);
+      toast.error(`Falha ao importar do Google Sheets: ${e.message || 'erro desconhecido'}`);
     }
     setIsLoading(false);
   }, []);
 
   const importFromCsv = useCallback(async (file: File) => {
     setIsLoading(true);
-    const text = await file.text();
-    const parsed = parseCsvData(text);
-    if (parsed.length > 0) {
+    try {
+      const text = await file.text();
+      const parsed = parseCsvData(text);
+      if (parsed.length === 0) {
+        toast.error('Formato CSV não reconhecido. Verifique se há uma coluna "Nome" ou "Aluno".');
+        setIsLoading(false);
+        return;
+      }
       await supabase.from('students').delete().neq('name', '');
       await upsertStudents(parsed);
+      toast.success(`${parsed.length} alunos importados do CSV!`);
+    } catch (e: any) {
+      console.error('Falha ao importar CSV:', e);
+      toast.error(`Falha ao importar CSV: ${e.message || 'erro desconhecido'}`);
     }
     setIsLoading(false);
   }, []);
 
   const importFromJson = useCallback(async (file: File) => {
     setIsLoading(true);
-    const text = await file.text();
-    const parsed = parseJsonData(text);
-    if (parsed.length > 0) {
+    try {
+      const text = await file.text();
+      const parsed = parseJsonData(text);
+      if (parsed.length === 0) {
+        toast.error('Formato JSON não reconhecido. Verifique a estrutura do arquivo.');
+        setIsLoading(false);
+        return;
+      }
       await supabase.from('students').delete().neq('name', '');
       await upsertStudents(parsed);
+      toast.success(`${parsed.length} alunos importados do JSON!`);
+    } catch (e: any) {
+      console.error('Falha ao importar JSON:', e);
+      toast.error(`Falha ao importar JSON: ${e.message || 'erro desconhecido'}`);
     }
     setIsLoading(false);
   }, []);
@@ -341,6 +402,7 @@ export function useStudentData() {
     setIsLoading(true);
     await supabase.from('students').delete().neq('name', '');
     await upsertStudents(MOCK_STUDENTS);
+    toast.success('Dados restaurados para demonstração!');
     setIsLoading(false);
   }, []);
 
