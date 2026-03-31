@@ -19,7 +19,7 @@ const Index = () => {
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet,
-    resetToMock, evolutionEvent, clearEvolutionEvent,
+    resetToMock, evolutionQueue, shiftEvolutionQueue, evolveStudent,
   } = useStudentData();
 
   const pokemonNames = useMemo(() => students.map(s => s.pokemon), [students]);
@@ -101,10 +101,11 @@ const Index = () => {
         onImportCsv={importFromCsv}
         onImportJson={importFromJson}
         onReset={resetToMock}
+        onEvolveStudent={evolveStudent}
         isLoading={isLoading}
       />
 
-      {evolutionEvent && <EvolutionAnimation event={evolutionEvent} onComplete={clearEvolutionEvent} />}
+      {evolutionQueue.length > 0 && <EvolutionAnimation event={evolutionQueue[0]} onComplete={shiftEvolutionQueue} />}
     </div>
   );
 };

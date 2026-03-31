@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Student, TYPE_LABELS } from '@/lib/types';
 import { StudentForm } from './StudentForm';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Pencil, UserPlus, RotateCcw, FileSpreadsheet, FileJson, FileText, Save } from 'lucide-react';
+import { Trash2, Pencil, UserPlus, RotateCcw, FileSpreadsheet, FileJson, FileText, Save, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AdminPanelProps {
@@ -25,6 +25,7 @@ interface AdminPanelProps {
   onImportCsv: (file: File) => void;
   onImportJson: (file: File) => void;
   onReset: () => void;
+  onEvolveStudent: (studentName: string) => void;
   isLoading: boolean;
 }
 
@@ -32,7 +33,7 @@ export function AdminPanel({
   open, onClose, students,
   onAddStudent, onRemoveStudent, onUpdateStudent,
   onAddTask, onRemoveTask, onUpdateScore,
-  onImportSheet, onImportCsv, onImportJson, onReset, isLoading,
+  onImportSheet, onImportCsv, onImportJson, onReset, onEvolveStudent, isLoading,
 }: AdminPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -109,36 +110,59 @@ export function AdminPanel({
                 </Select>
               </div>
 
-              {selectedStudent && (
-                <div className="space-y-3">
-                  {Object.entries(taskScores).length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-2">Nenhuma atividade encontrada.</p>
-                  ) : (
-                    Object.entries(taskScores).map(([taskName, score]) => (
-                      <div key={taskName} className="flex items-center gap-3">
-                        <Label className="text-sm flex-1 truncate">{taskName}</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={1}
-                          value={score}
-                          onChange={e => {
-                            setTaskScores(prev => ({
-                              ...prev,
-                              [taskName]: Math.max(0, Number(e.target.value) || 0),
-                            }));
-                          }}
-                          className="h-9 w-20 bg-background border-border text-center"
-                        />
-                      </div>
-                    ))
-                  )}
+              {selectedStudent && (() => {
+                const student = students.find(s => s.name === selectedStudent);
+                const totalScore = student?.totalScore || 0;
+                const currentStage = totalScore >= 200 ? 2 : totalScore >= 100 ? 1 : 0;
+                const isMaxStage = currentStage >= 2;
 
-                  <Button onClick={handleSaveTasks} className="w-full gap-2" size="sm">
-                    <Save className="h-4 w-4" /> Salvar Atividades
-                  </Button>
-                </div>
-              )}
+                return (
+                  <div className="space-y-3">
+                    {Object.entries(taskScores).length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-2">Nenhuma atividade encontrada.</p>
+                    ) : (
+                      Object.entries(taskScores).map(([taskName, score]) => (
+                        <div key={taskName} className="flex items-center gap-3">
+                          <Label className="text-sm flex-1 truncate">{taskName}</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={score}
+                            onChange={e => {
+                              setTaskScores(prev => ({
+                                ...prev,
+                                [taskName]: Math.max(0, Number(e.target.value) || 0),
+                              }));
+                            }}
+                            className="h-9 w-20 bg-background border-border text-center"
+                          />
+                        </div>
+                      ))
+                    )}
+
+                    <Button onClick={handleSaveTasks} className="w-full gap-2" size="sm">
+                      <Save className="h-4 w-4" /> Salvar Atividades
+                    </Button>
+
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Estágio atual: <span className="font-bold text-foreground">{currentStage}/2</span> · Pontuação: <span className="font-bold text-foreground">{totalScore}</span>
+                      </p>
+                      <Button
+                        onClick={() => onEvolveStudent(selectedStudent)}
+                        disabled={isMaxStage || isLoading}
+                        variant="outline"
+                        className="w-full gap-2"
+                        size="sm"
+                      >
+                        <Zap className="h-4 w-4" />
+                        {isMaxStage ? 'Estágio Máximo' : 'Evoluir Pokémon'}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
             </TabsContent>
 
             {/* STUDENTS TAB */}

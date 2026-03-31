@@ -325,11 +325,30 @@ export function useStudentData() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [evolutionEvent, setEvolutionEvent] = useState<EvolutionEvent | null>(null);
+  const [evolutionQueue, setEvolutionQueue] = useState<EvolutionEvent[]>([]);
   const studentsRef = useRef<Student[]>([]);
 
   useEffect(() => { studentsRef.current = students; }, [students]);
   useEffect(() => { fetchStudents(); }, []);
+
+  const enqueueEvolutions = useCallback((oldStudents: Student[], newStudents: Student[]) => {
+    const events: EvolutionEvent[] = [];
+    for (const ns of newStudents) {
+      const os = oldStudents.find(s => s.name === ns.name);
+      const oldStage = os ? getStage(os.totalScore) : 0;
+      const newStage = getStage(ns.totalScore);
+      if (newStage > oldStage) {
+        events.push({ studentName: ns.name, pokemon: ns.pokemon, oldStage, newStage });
+      }
+    }
+    if (events.length > 0) {
+      setEvolutionQueue(prev => [...prev, ...events]);
+    }
+  }, []);
+
+  const triggerEvolution = useCallback((studentName: string, pokemon: string, oldStage: number, newStage: number) => {
+    setEvolutionQueue(prev => [...prev, { studentName, pokemon, oldStage, newStage }]);
+  }, []);
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
@@ -444,7 +463,7 @@ export function useStudentData() {
       setStudents(prev => prev.map(s => s.name === studentName ? updated : s));
       setLastUpdate(new Date());
       if (newStage > oldStage) {
-        setEvolutionEvent({ studentName, pokemon: student.pokemon, oldStage, newStage });
+        triggerEvolution(studentName, student.pokemon, oldStage, newStage);
       }
     }
   }, []);
@@ -516,7 +535,46 @@ export function useStudentData() {
     setIsLoading(false);
   }, []);
 
-  const clearEvolutionEvent = useCallback(() => setEvolutionEvent(null), []);
+  const shiftEvolutionQueue = useCallback(() => {
+    setEvolutionQueue(prev => prev.slice(1));
+  }, []);
+
+  const evolveStudent = useCallback(async (studentName: string) => {
+    const current = studentsRef.current;
+    const student = current.find(s => s.name === studentName);
+    if (!student) return;
+
+    const currentStage = getStage(student.totalScore);
+    if (currentStage >= 2) {
+      toast.info(`${studentName} já está no estágio máximo!`);
+      return;
+    }
+
+    const targetScore = currentStage === 0 ? 100 : 200;
+    const diff = targetScore - student.totalScore;
+    if (diff <= 0) return;
+
+    // Add score to first task (or create one)
+    let updatedTasks = [...student.tasks];
+    if (updatedTasks.length === 0) {
+      updatedTasks = [{ name: 'Evolução Manual', score: diff }];
+    } else {
+      updatedTasks = updatedTasks.map((t, i) => i === 0 ? { ...t, score: t.score + diff } : t);
+    }
+
+    const updated = recalcTotal({ ...student, tasks: updatedTasks });
+    const { error } = await supabase.from('students').update({
+      tasks: updated.tasks as any,
+      total_score: updated.totalScore,
+    }).eq('name', studentName);
+
+    if (!error) {
+      setStudents(prev => prev.map(s => s.name === studentName ? updated : s));
+      setLastUpdate(new Date());
+      triggerEvolution(studentName, student.pokemon, currentStage, currentStage + 1);
+      toast.success(`${studentName} evoluiu!`);
+    }
+  }, [triggerEvolution]);
 
   return {
     students, isLoading, lastUpdate,
@@ -524,6 +582,6 @@ export function useStudentData() {
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet, resetToMock,
-    evolutionEvent, clearEvolutionEvent,
+    evolutionQueue, shiftEvolutionQueue, evolveStudent, triggerEvolution,
   };
 }
