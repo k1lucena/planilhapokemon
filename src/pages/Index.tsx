@@ -93,7 +93,7 @@ const Index = () => {
         onAddStudent={addStudent}
         onRemoveStudent={removeStudent}
         onUpdateStudent={updateStudent}
-        onUpdateNotas={updateNotas}
+        
         onAddTask={addTask}
         onRemoveTask={removeTask}
         onUpdateScore={updateTaskScore}
