@@ -1,55 +1,56 @@
 
 
-## Banco de Dados Supabase + Animação de Evolução + Importação Multi-formato
+## Apenas 3 Iniciais + Tudo em pt-BR + Sprites Animados no Pódio
 
-### 1. Configurar Supabase
-- Conectar projeto Supabase externo ao Lovable
-- Criar tabela `students` com colunas: `id` (uuid, PK), `name` (text, unique), `pokemon` (text), `type` (text), `tasks` (jsonb), `total_score` (integer), `created_at` (timestamptz)
-- Habilitar RLS com política pública de leitura e escrita (sem auth, já que é um painel escolar)
+### 1. Restringir Pokémon aos 3 Iniciais
 
-### 2. Refatorar `useStudentData.ts`
-- Substituir localStorage por queries Supabase (`supabase.from('students')`)
-- CRUD completo: `select`, `insert`, `update`, `delete` direto no banco
-- Manter recálculo de `totalScore` antes de salvar
-- Remover toda lógica de localStorage
+**`src/components/StudentForm.tsx`**: Substituir o campo de texto livre por um `Select` com 3 opções fixas:
+- Bulbasaur (tipo: grass)
+- Charmander (tipo: fire)
+- Squirtle (tipo: water)
 
-### 3. Importação Multi-formato (AdminPanel → aba Dados)
-- **Google Sheets**: manter lógica atual de importação via URL pública (já existe)
-- **CSV**: input de arquivo + parse com `Papa.parse` (papaparse) — detecta colunas Nome/Pokémon/Tipo/Tarefas
-- **JSON**: input de arquivo + `JSON.parse` — espera array de objetos `{name, pokemon, type, tasks}`
-- Todos os formatos inserem/atualizam no Supabase ao importar
-- UI: 3 botões na aba Dados (Sheets / CSV / JSON) com file input para CSV e JSON
+Ao selecionar o Pokémon, o tipo é preenchido automaticamente. Remover o select de tipo separado.
 
-### 4. Animação de Evolução
-- Criar componente `EvolutionAnimation.tsx`: overlay fullscreen com sequência animada
-- Quando a pontuação de um aluno cruza 100 ou 200 pts (ao atualizar score):
-  - Detectar mudança de estágio comparando antes/depois
-  - Exibir animação: sprite antigo → flash de luz (scale + opacity) → sprite novo
-  - Texto "EVOLUIU!" com efeito de glow
-  - Duração ~2.5s, fecha automaticamente
-- Integrar no `Index.tsx`: state para controlar qual aluno está evoluindo
-- Hook `usePrevious` para comparar estágios anteriores
+**`src/lib/mockData.ts`**: Atualizar mock para usar apenas bulbasaur, charmander e squirtle, distribuindo os alunos entre os 3. Remover pokémons como pikachu, eevee, gastly, etc.
 
-### Detalhes Técnicos
+### 2. Sprites Animados no Pódio (GIFs)
 
-**Tabela SQL:**
-```sql
-CREATE TABLE students (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text UNIQUE NOT NULL,
-  pokemon text NOT NULL,
-  type text NOT NULL DEFAULT 'normal',
-  tasks jsonb NOT NULL DEFAULT '[]',
-  total_score integer NOT NULL DEFAULT 0,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE students ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public access" ON students FOR ALL USING (true) WITH CHECK (true);
+**`src/hooks/usePokemonData.ts`**: Além do sprite estático (official-artwork), buscar também o sprite animado da PokéAPI:
+- `sprites.versions['generation-v']['black-white'].animated.front_default` para cada evolução
+- Salvar como campo `animatedSprite` no `PokemonEvolution`
+
+**`src/lib/types.ts`**: Adicionar campo `animatedSprite?: string` ao `PokemonEvolution`.
+
+**`src/components/Podium.tsx`**: Usar o sprite animado (GIF) em vez do estático. Adicionar CSS de bounce/float contínuo para dar vida extra. Manter fallback para sprite estático.
+
+### 3. Traduzir Tudo para pt-BR
+
+Varrer todos os componentes e traduzir strings restantes em inglês:
+- `battleSystem.ts`: "Em alta", "Subindo", "Estagnado" (já em pt-BR, ok)
+- `Podium.tsx`: ok
+- `StudentCard.tsx`: labels "MAX", "pts" → manter
+- `Rankings.tsx`: verificar e traduzir headers
+- `PokedexModal.tsx`: verificar e traduzir
+- `AdminPanel.tsx`: já em pt-BR
+- Tipos dos pokémon: exibir tradução pt-BR (fogo, água, planta) nos badges em vez de "fire", "water", "grass"
+
+**Mapeamento de tipos pt-BR** em `src/lib/types.ts`:
+```
+fire → Fogo, water → Água, grass → Planta
 ```
 
-**Parsing CSV:** Usar papaparse para detectar headers automaticamente (mesma lógica de detecção de colunas do Sheets)
+Como agora só temos 3 tipos, simplifica bastante.
 
-**Arquivos a criar:** `src/components/EvolutionAnimation.tsx`
-**Arquivos a modificar:** `src/hooks/useStudentData.ts`, `src/components/AdminPanel.tsx`, `src/pages/Index.tsx`
-**Dependências a instalar:** `papaparse`, `@types/papaparse`
+### Arquivos Modificados
+
+| Arquivo | Mudança |
+|---|---|
+| `src/lib/types.ts` | Adicionar `animatedSprite` a `PokemonEvolution`, mapa de tradução de tipos |
+| `src/lib/mockData.ts` | Apenas bulbasaur/charmander/squirtle |
+| `src/hooks/usePokemonData.ts` | Buscar sprites animados (GIF) |
+| `src/components/StudentForm.tsx` | Select fixo com 3 pokémons, tipo automático |
+| `src/components/Podium.tsx` | Usar sprite animado, animação bounce |
+| `src/components/StudentCard.tsx` | Exibir tipo em pt-BR |
+| `src/components/PokedexModal.tsx` | Traduzir strings restantes |
+| `src/components/Rankings.tsx` | Traduzir strings restantes |
 
