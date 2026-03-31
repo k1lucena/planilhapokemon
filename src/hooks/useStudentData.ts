@@ -277,6 +277,9 @@ function getStage(score: number): number {
   return 0;
 }
 
+const SHEET_URL_KEY = 'pokedex_sheet_url';
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRKCw_N9_9Im877XLsVAd7FUE-9mDToHqm7u8KoYZQpC71QcPVQeRJqoB3ExHBDhG5UJ_BHYKyusi3b/pubhtml';
+
 export function useStudentData() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -417,6 +420,9 @@ export function useStudentData() {
         return;
       }
 
+      // Save URL for future refreshes
+      localStorage.setItem(SHEET_URL_KEY, sheetUrl);
+
       console.log('[Sheets] URL normalizada:', csvUrl);
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', {
@@ -444,6 +450,11 @@ export function useStudentData() {
     }
     setIsLoading(false);
   }, []);
+
+  const refreshFromSheet = useCallback(async () => {
+    const savedUrl = localStorage.getItem(SHEET_URL_KEY) || DEFAULT_SHEET_URL;
+    await importFromSheet(savedUrl);
+  }, [importFromSheet]);
 
   const importFromCsv = useCallback(async (file: File) => {
     setIsLoading(true);
@@ -510,6 +521,7 @@ export function useStudentData() {
     importFromSheet,
     importFromCsv,
     importFromJson,
+    refreshFromSheet,
     resetToMock,
     evolutionEvent,
     clearEvolutionEvent,

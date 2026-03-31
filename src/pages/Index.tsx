@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useStudentData } from '@/hooks/useStudentData';
 import { usePokemonData } from '@/hooks/usePokemonData';
 import { Student } from '@/lib/types';
+import { RefreshCw } from 'lucide-react';
 import { Podium } from '@/components/Podium';
 import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
@@ -18,6 +19,7 @@ const Index = () => {
     addStudent, removeStudent, updateStudent,
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
+    refreshFromSheet,
     resetToMock, evolutionEvent, clearEvolutionEvent,
   } = useStudentData();
 
@@ -39,13 +41,17 @@ const Index = () => {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
+            <Button variant="outline" size="sm" onClick={refreshFromSheet} disabled={isLoading} className="gap-1">
+              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Atualizar</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
               <Settings className="h-3 w-3" />
-              Gerenciar
+              <span className="hidden sm:inline">Gerenciar</span>
             </Button>
           </div>
         </div>
