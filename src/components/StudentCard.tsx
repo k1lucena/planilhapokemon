@@ -36,7 +36,8 @@ export function StudentCard({ student, pokemonData, onClick, index = 0 }: Props)
 
   return (
     <div
-      className={`glass-card rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 ${glowClass} overflow-hidden animate-fade-in`}
+      className={`glass-card rounded-xl cursor-pointer transition-all duration-500 hover:scale-105 hover:-translate-y-1 ${glowClass} overflow-hidden animate-fade-in student-card-hover`}
+      style={{ animationDelay: `${index * 0.08}s` }}
       onClick={onClick}
     >
       <div className="p-4 flex flex-col items-center text-center">
