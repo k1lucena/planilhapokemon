@@ -34,6 +34,7 @@ export function AdminPanel({
 }: AdminPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [sheetUrl, setSheetUrl] = useState('');
   const csvInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
