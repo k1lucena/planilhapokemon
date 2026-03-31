@@ -5,9 +5,39 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
-function extractSheetId(url: string): string | null {
-  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  return match ? match[1] : null;
+/**
+ * Normaliza qualquer URL do Google Sheets para uma URL de exportação CSV.
+ * Suporta:
+ *  - link de edição: /spreadsheets/d/<id>/edit
+ *  - link publicado: /spreadsheets/d/e/<pub-id>/pubhtml ou /pub?output=csv
+ *  - link de exportação: /spreadsheets/d/<id>/export?format=csv
+ *  - link direto já em CSV
+ */
+function buildSheetCsvUrl(url: string): string | null {
+  const trimmed = url.trim();
+
+  // Already a CSV export URL — use as-is
+  if (/\/pub\?.*output=csv/i.test(trimmed) || /\/export\?.*format=csv/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Published link: /spreadsheets/d/e/<pub-id>/pub...
+  const pubMatch = trimmed.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9_-]+)/);
+  if (pubMatch) {
+    const gidMatch = trimmed.match(/gid=(\d+)/);
+    const gid = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/e/${pubMatch[1]}/pub?output=csv${gid}`;
+  }
+
+  // Normal link: /spreadsheets/d/<id>/...
+  const normalMatch = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (normalMatch) {
+    const gidMatch = trimmed.match(/gid=(\d+)/);
+    const gid = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/${normalMatch[1]}/pub?output=csv${gid}`;
+  }
+
+  return null;
 }
 
 function recalcTotal(student: Student): Student {
