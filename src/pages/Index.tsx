@@ -92,15 +92,11 @@ const Index = () => {
         onAddStudent={addStudent}
         onRemoveStudent={removeStudent}
         onUpdateStudent={updateStudent}
-        
         onAddTask={addTask}
         onRemoveTask={removeTask}
         onUpdateScore={updateTaskScore}
-        onImportSheet={importFromSheet}
-        onImportCsv={importFromCsv}
-        onImportJson={importFromJson}
         onReset={resetToMock}
-        onEvolveStudent={evolveStudent}
+        onEvolveStudent={(name) => { setAdminOpen(false); evolveStudent(name); }}
         isLoading={isLoading}
       />
 
