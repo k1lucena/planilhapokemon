@@ -168,15 +168,10 @@ function parseCsvData(text: string): Student[] {
       if (isSkipColumn(f)) skipKeys.add(f);
     }
 
-    // First try explicit task keywords
     let taskKeys = (result.meta.fields || []).filter(f => {
       if (skipKeys.has(f)) return false;
       return isTaskColumn(f);
     });
-    // Fallback: use remaining non-skip numeric-looking columns
-    if (taskKeys.length === 0) {
-      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f) && f.trim() !== '');
-    }
 
     console.log('[CSV] Colunas de tarefa:', taskKeys);
     console.log('[CSV] Colunas ignoradas:', [...skipKeys]);
