@@ -1,52 +1,44 @@
 
 
-## Corrigir as 3 Importações
+## Adicionar Estilo Pokédex + Pokébola como Imagem Principal
 
-### Problemas Encontrados
+### Visão Geral
+Aplicar o visual da Pokédex clássica (vermelho, com detalhes como a lente azul e LEDs) à interface e adicionar uma Pokébola como imagem/ícone principal do sistema no header.
 
-1. **Google Sheets**: O sheet ID hardcoded (`1Ym7Xwu...`) retorna **401** — a planilha não está publicada/compartilhada publicamente. Além disso, não há como o usuário inserir a URL da sua própria planilha.
+### 1. Criar SVG da Pokébola
+**`src/components/PokeballIcon.tsx`** — Componente SVG inline de uma Pokébola clássica (metade vermelha, metade branca, faixa preta central, botão central). Será usada no header como logo principal.
 
-2. **CSV e JSON**: A lógica de parse parece correta, mas o fluxo no AdminPanel chama `onImportSheet` sem pedir URL ao usuário. CSV e JSON usam file input (ok), porém dependem do `upsertStudents` que pode falhar silenciosamente se houver conflito de dados.
+### 2. Redesenhar o Header como Pokédex
+**`src/pages/Index.tsx`** — Refazer o header com visual de Pokédex:
+- Fundo vermelho escuro (`hsl(0 75% 35%)`) com borda arredondada e sombra inset
+- "Lente" azul circular no canto esquerdo (como a Pokédex da imagem)
+- LEDs decorativos (3 círculos coloridos pequenos: vermelho, amarelo, verde)
+- Pokébola SVG ao lado do título
+- Manter botão "Gerenciar" e hora
 
-### Solução
+### 3. Estilizar Cards com Moldura Pokédex
+**`src/components/StudentCard.tsx`** — Adicionar borda vermelha sutil e cantos arredondados estilo "tela da Pokédex" (borda dupla, fundo levemente diferente no topo simulando o frame vermelho).
 
-**1. Google Sheets — Permitir URL customizada**
-- No AdminPanel, ao clicar "Google Sheets", abrir um mini-dialog/input pedindo a URL da planilha (ao invés de usar ID hardcoded)
-- O usuário cola o link do Google Sheets (ex: `https://docs.google.com/spreadsheets/d/XXXX/edit`)
-- Extrair o ID da planilha da URL e construir a URL de export CSV: `https://docs.google.com/spreadsheets/d/{ID}/pub?output=csv`
-- A planilha precisa estar **publicada na web** (File → Share → Publish to web) — adicionar instrução na UI
-- Passar a URL CSV para a edge function (proxy CORS), receber o texto CSV, e reusar `parseCsvData` ao invés de `parseSheetData` (mais simples e confiável que o formato `gviz/tq`)
-- Remover o `SHEET_ID` hardcoded
+### 4. Estilizar Modal como Pokédex Aberta
+**`src/components/PokedexModal.tsx`** — Adicionar decorações no header do modal:
+- Borda vermelha no topo do dialog
+- Lente azul pequena decorativa
+- LEDs pequenos
 
-**2. Edge Function — Aceitar qualquer URL**
-- Já aceita qualquer URL no body (ok, sem mudança necessária)
+### 5. Atualizar CSS Global
+**`src/index.css`** — Adicionar variáveis e classes:
+- `--pokedex-red: 0 75% 35%`
+- `--pokedex-dark-red: 0 65% 25%`
+- `--pokedex-blue-lens: 200 80% 55%`
+- Classes `.pokedex-frame`, `.pokedex-lens`, `.pokedex-leds`
 
-**3. CSV e JSON — Corrigir fluxo de substituição**
-- Garantir que o `delete` + `upsert` funciona: mover a lógica de delete para dentro do `upsertStudents` quando chamado por importação (flag `replaceAll`)
-- Ou manter como está mas adicionar `await` correto e verificar erros do delete
-
-**4. Feedback visual**
-- Já tem toasts (ok)
-- Adicionar estado de loading nos botões CSV/JSON durante importação
-
-### Arquivos a Modificar
+### Arquivos Modificados
 
 | Arquivo | Mudança |
 |---|---|
-| `src/hooks/useStudentData.ts` | Remover `SHEET_ID` hardcoded, `importFromSheet` recebe URL como parâmetro, usa formato CSV via edge function + `parseCsvData` |
-| `src/components/AdminPanel.tsx` | Adicionar input de URL para Google Sheets com instrução "A planilha deve estar publicada na web", passar URL para `importFromSheet` |
-
-### Detalhes Técnicos
-
-**Fluxo Google Sheets atualizado:**
-```
-Usuário cola URL → extrair sheet ID → 
-construir URL: docs.google.com/spreadsheets/d/{ID}/pub?output=csv →
-edge function faz fetch → retorna CSV raw →
-parseCsvData() → upsert no banco
-```
-
-**AdminPanel UI para Sheets:**
-- Input de texto + botão "Importar"
-- Texto auxiliar: "Cole o link da planilha. Ela deve estar publicada na web (Arquivo → Compartilhar → Publicar na Web)"
+| `src/components/PokeballIcon.tsx` | Novo — SVG Pokébola |
+| `src/pages/Index.tsx` | Header redesenhado estilo Pokédex com Pokébola |
+| `src/components/StudentCard.tsx` | Borda/frame estilo Pokédex |
+| `src/components/PokedexModal.tsx` | Decorações Pokédex no modal |
+| `src/index.css` | Variáveis e classes Pokédex |
 
