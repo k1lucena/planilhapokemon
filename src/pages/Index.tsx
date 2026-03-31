@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useStudentData } from '@/hooks/useStudentData';
 import { usePokemonData } from '@/hooks/usePokemonData';
 import { Student } from '@/lib/types';
-import { generateBattleResults } from '@/lib/battleSystem';
 import { Podium } from '@/components/Podium';
 import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
@@ -28,37 +27,23 @@ const Index = () => {
   const [adminOpen, setAdminOpen] = useState(false);
 
   const sorted = useMemo(() => [...students].sort((a, b) => b.totalScore - a.totalScore), [students]);
-  const battleStats = useMemo(() => generateBattleResults(students), [students]);
 
   return (
     <div className="min-h-screen game-bg">
-      <header className="pokedex-header sticky top-0 z-50 py-4 px-4 shadow-lg">
+      <header className="sticky top-0 z-50 py-4 px-4 shadow-lg border-b border-border/50" style={{ background: 'linear-gradient(180deg, hsl(230 15% 10%) 0%, hsl(230 15% 8% / 0.95) 100%)', backdropFilter: 'blur(16px)' }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            {/* Lente azul da Pokédex */}
-            <div className="pokedex-lens hidden sm:block" />
-            {/* LEDs decorativos */}
-            <div className="flex gap-1.5 hidden sm:flex">
-              <div className="pokedex-led pokedex-led-red" />
-              <div className="pokedex-led pokedex-led-yellow" />
-              <div className="pokedex-led pokedex-led-green" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 text-center">
-            <PokeballIcon size={36} className="animate-float" />
-            <div>
-              <h1 className="font-pixel text-sm md:text-lg tracking-wider text-white drop-shadow-md">
-                Pokédex
-              </h1>
-            </div>
+          <div className="flex items-center gap-3">
+            <PokeballIcon size={32} className="animate-float" />
+            <h1 className="font-pixel text-xs md:text-sm tracking-wider text-foreground">
+              Pokédex Acadêmica
+            </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-white/60 hidden sm:inline">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
-            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1 bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
               <Settings className="h-3 w-3" />
               Gerenciar
             </Button>
@@ -73,37 +58,35 @@ const Index = () => {
           </div>
         )}
 
-        <Podium students={sorted} pokemonMap={pokemonMap} battleStats={battleStats} onSelect={setSelectedStudent} />
+        <Podium students={sorted} pokemonMap={pokemonMap} onSelect={setSelectedStudent} />
 
         <section>
-          <h2 className="font-pixel text-center text-lg md:text-xl text-primary mb-2 tracking-wider">
-            🎮 JOGADORES
+          <h2 className="text-center text-lg md:text-xl font-bold text-foreground mb-1">
+            Treinadores
           </h2>
-          <p className="text-center text-muted-foreground text-sm mb-6">Todos os treinadores na arena</p>
+          <p className="text-center text-muted-foreground text-sm mb-6">Acompanhe o progresso de cada aluno</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {sorted.map(student => (
               <StudentCard
                 key={student.name}
                 student={student}
                 pokemonData={pokemonMap.get(student.pokemon)}
-                battleStats={battleStats.get(student.name)}
                 onClick={() => setSelectedStudent(student)}
               />
             ))}
           </div>
         </section>
 
-        <Rankings students={students} battleStats={battleStats} onSelect={setSelectedStudent} />
+        <Rankings students={students} onSelect={setSelectedStudent} />
       </main>
 
       <footer className="border-t border-border bg-card/50 text-center py-4 mt-12">
-        <p className="font-pixel text-xs text-muted-foreground">Pokédex © {new Date().getFullYear()}</p>
+        <p className="text-xs text-muted-foreground">Pokédex Acadêmica © {new Date().getFullYear()}</p>
       </footer>
 
       <PokedexModal
         student={selectedStudent}
         pokemonData={selectedStudent ? pokemonMap.get(selectedStudent.pokemon) : undefined}
-        battleStats={selectedStudent ? battleStats.get(selectedStudent.name) : undefined}
         open={!!selectedStudent}
         onClose={() => setSelectedStudent(null)}
       />
