@@ -5,6 +5,7 @@ interface Props {
   student: Student;
   pokemonData?: PokemonData;
   onClick: () => void;
+  index?: number;
 }
 
 const GLOW_CLASSES: Record<string, string> = {
