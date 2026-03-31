@@ -105,7 +105,5 @@ export function getGradeColor(grade: number): string {
 }
 
 export function getGradeBg(grade: number): string {
-  if (grade >= 7) return 'bg-emerald-500/15 border-emerald-500/30';
-  if (grade >= 5) return 'bg-yellow-500/15 border-yellow-500/30';
-  return 'bg-red-500/15 border-red-500/30';
+  return 'bg-muted/50 border-border';
 }

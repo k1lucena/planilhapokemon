@@ -295,6 +295,18 @@ export function useStudentData() {
     fetchStudents();
   }, []);
 
+  // Auto-refresh a cada 5 minutos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const savedUrl = localStorage.getItem(SHEET_URL_KEY);
+      if (savedUrl) {
+        console.log('[Auto-refresh] Atualizando dados da planilha...');
+        refreshFromSheet();
+      }
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [refreshFromSheet]);
+
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     const { data, error } = await supabase.from('students').select('*');
