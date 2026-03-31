@@ -84,9 +84,7 @@ function parseSheetData(text: string): Student[] {
       }
     }
     if (taskIndices.length === 0) {
-      for (let i = 0; i < headers.length; i++) {
-        if (!skipIndices.has(i) && headers[i]) taskIndices.push(i);
-      }
+      console.warn('[Sheets] Nenhuma coluna "Atividade" encontrada.');
     }
 
     return rows
