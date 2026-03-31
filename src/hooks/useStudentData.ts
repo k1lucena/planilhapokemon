@@ -42,12 +42,16 @@ function parseSheetData(text: string): Student[] {
     if (nameIdx === -1) return [];
 
     const taskIndices: number[] = [];
-    const totalIdx = headers.findIndex((h: string) => h.includes('total'));
-    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx, totalIdx].filter(i => i >= 0));
+    const skipCheckFns = [(h: string) => h.includes('total'), (h: string) => h.includes('soma'), (h: string) => h.includes('nota'), (h: string) => h.includes('matricula')];
+    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(i => i >= 0));
+    for (let i = 0; i < headers.length; i++) {
+      if (skipCheckFns.some(fn => fn(headers[i]))) skipIndices.add(i);
+    }
 
+    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
     for (let i = 0; i < headers.length; i++) {
       if (skipIndices.has(i)) continue;
-      if (headers[i] && (headers[i].includes('tarefa') || headers[i].includes('task') || /^\d+$/.test(headers[i]))) {
+      if (headers[i] && (taskKeywords.some(k => headers[i].includes(k)) || /^\d+$/.test(headers[i]))) {
         taskIndices.push(i);
       }
     }
@@ -101,10 +105,21 @@ function parseCsvData(text: string): Student[] {
     }
 
     const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
-    const totalKey = result.meta.fields?.find(f => f.toLowerCase().includes('total'));
-    if (totalKey) skipKeys.add(totalKey);
+    const skipPatterns = ['total', 'soma', 'nota', 'matricula'];
+    for (const f of (result.meta.fields || [])) {
+      const l = f.toLowerCase().trim();
+      if (skipPatterns.some(p => l.includes(p))) skipKeys.add(f);
+    }
 
-    const taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f));
+    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
+    let taskKeys = (result.meta.fields || []).filter(f => {
+      if (skipKeys.has(f)) return false;
+      const l = f.toLowerCase().trim();
+      return taskKeywords.some(k => l.includes(k));
+    });
+    if (taskKeys.length === 0) {
+      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f));
+    }
 
     return (result.data as any[])
       .filter(row => row[nameKey])
