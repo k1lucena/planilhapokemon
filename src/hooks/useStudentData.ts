@@ -463,7 +463,7 @@ export function useStudentData() {
       setStudents(prev => prev.map(s => s.name === studentName ? updated : s));
       setLastUpdate(new Date());
       if (newStage > oldStage) {
-        setEvolutionEvent({ studentName, pokemon: student.pokemon, oldStage, newStage });
+        triggerEvolution(studentName, student.pokemon, oldStage, newStage);
       }
     }
   }, []);
