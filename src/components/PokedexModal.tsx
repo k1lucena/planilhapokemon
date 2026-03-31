@@ -125,7 +125,6 @@ export function PokedexModal({ student, pokemonData, open, onClose }: Props) {
                 </div>
               ))}
             </div>
-            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
