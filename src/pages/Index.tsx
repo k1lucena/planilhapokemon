@@ -17,7 +17,6 @@ const Index = () => {
     students, isLoading, lastUpdate,
     addStudent, removeStudent, updateStudent, updateNotas,
     addTask, removeTask, updateTaskScore,
-    importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet,
     resetToMock, evolutionQueue, shiftEvolutionQueue, evolveStudent,
   } = useStudentData();
