@@ -19,6 +19,9 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
+          nota1: number | null
+          nota2: number | null
+          nota3: number | null
           pokemon: string
           tasks: Json
           total_score: number
@@ -28,6 +31,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
+          nota1?: number | null
+          nota2?: number | null
+          nota3?: number | null
           pokemon: string
           tasks?: Json
           total_score?: number
@@ -37,6 +43,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+          nota1?: number | null
+          nota2?: number | null
+          nota3?: number | null
           pokemon?: string
           tasks?: Json
           total_score?: number

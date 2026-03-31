@@ -1,0 +1,4 @@
+ALTER TABLE public.students 
+  ADD COLUMN IF NOT EXISTS nota1 numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS nota2 numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS nota3 numeric DEFAULT 0;

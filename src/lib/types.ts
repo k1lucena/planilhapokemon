@@ -9,6 +9,9 @@ export interface Student {
   type: string;
   tasks: StudentTask[];
   totalScore: number;
+  nota1: number;
+  nota2: number;
+  nota3: number;
 }
 
 export interface PokemonEvolution {
@@ -37,45 +40,19 @@ export function getProgressToNextEvolution(score: number): { progress: number; n
 }
 
 export const TYPE_LABELS: Record<string, string> = {
-  fire: 'Fogo',
-  water: 'Água',
-  grass: 'Planta',
-  electric: 'Elétrico',
-  psychic: 'Psíquico',
-  ice: 'Gelo',
-  dragon: 'Dragão',
-  dark: 'Sombrio',
-  fairy: 'Fada',
-  normal: 'Normal',
-  fighting: 'Lutador',
-  flying: 'Voador',
-  poison: 'Veneno',
-  ground: 'Terra',
-  rock: 'Pedra',
-  bug: 'Inseto',
-  ghost: 'Fantasma',
-  steel: 'Aço',
+  fire: 'Fogo', water: 'Água', grass: 'Planta', electric: 'Elétrico',
+  psychic: 'Psíquico', ice: 'Gelo', dragon: 'Dragão', dark: 'Sombrio',
+  fairy: 'Fada', normal: 'Normal', fighting: 'Lutador', flying: 'Voador',
+  poison: 'Veneno', ground: 'Terra', rock: 'Pedra', bug: 'Inseto',
+  ghost: 'Fantasma', steel: 'Aço',
 };
 
 export const TYPE_COLORS: Record<string, string> = {
-  fire: 'type-fire',
-  water: 'type-water',
-  grass: 'type-grass',
-  electric: 'type-electric',
-  psychic: 'type-psychic',
-  ice: 'type-ice',
-  dragon: 'type-dragon',
-  dark: 'type-dark',
-  fairy: 'type-fairy',
-  normal: 'type-normal',
-  fighting: 'type-fighting',
-  flying: 'type-flying',
-  poison: 'type-poison',
-  ground: 'type-ground',
-  rock: 'type-rock',
-  bug: 'type-bug',
-  ghost: 'type-ghost',
-  steel: 'type-steel',
+  fire: 'type-fire', water: 'type-water', grass: 'type-grass', electric: 'type-electric',
+  psychic: 'type-psychic', ice: 'type-ice', dragon: 'type-dragon', dark: 'type-dark',
+  fairy: 'type-fairy', normal: 'type-normal', fighting: 'type-fighting', flying: 'type-flying',
+  poison: 'type-poison', ground: 'type-ground', rock: 'type-rock', bug: 'type-bug',
+  ghost: 'type-ghost', steel: 'type-steel',
 };
 
 export const STARTER_POKEMON = [
@@ -84,20 +61,8 @@ export const STARTER_POKEMON = [
   { name: 'squirtle', type: 'water', label: 'Squirtle' },
 ] as const;
 
-export interface StudentGrades {
-  nota1: number;
-  nota2: number;
-  nota3: number;
-  media: number;
-}
-
-export function calculateGrades(tasks: StudentTask[]): StudentGrades {
-  const scores = tasks.map(t => t.score);
-  const nota1 = scores.length >= 5 ? scores.slice(0, 5).reduce((a, b) => a + b, 0) : 0;
-  const nota2 = scores.length >= 10 ? scores.slice(5, 10).reduce((a, b) => a + b, 0) : 0;
-  const nota3 = scores.length >= 11 ? scores[10] : 0;
-  const media = +(((nota1 + nota2 + nota3) / 3).toFixed(1));
-  return { nota1, nota2, nota3, media };
+export function getMediaFromNotas(nota1: number, nota2: number, nota3: number): number {
+  return +((nota1 + nota2 + nota3) / 3).toFixed(1);
 }
 
 export function getGradeColor(grade: number): string {
