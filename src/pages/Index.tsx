@@ -102,6 +102,7 @@ const Index = () => {
         onImportCsv={importFromCsv}
         onImportJson={importFromJson}
         onReset={resetToMock}
+        onTriggerEvolution={triggerEvolution}
         isLoading={isLoading}
       />
 

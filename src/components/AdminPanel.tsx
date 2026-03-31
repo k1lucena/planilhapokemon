@@ -163,6 +163,9 @@ export function AdminPanel({
                           <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                           <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {TYPE_LABELS[s.type] || s.type}</p>
                         </div>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-secondary hover:text-secondary" onClick={() => onTriggerEvolution(s.name)} title="Evoluir">
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </Button>
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingStudent(s)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
