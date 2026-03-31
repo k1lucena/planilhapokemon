@@ -516,7 +516,26 @@ export function useStudentData() {
     setIsLoading(false);
   }, []);
 
-  const clearEvolutionEvent = useCallback(() => setEvolutionEvent(null), []);
+  const clearEvolutionEvent = useCallback(() => {
+    setEvolutionQueue(prev => prev.slice(1));
+  }, []);
+
+  const triggerEvolution = useCallback((studentName: string) => {
+    const student = studentsRef.current.find(s => s.name === studentName);
+    if (!student) return;
+    const stage = getStage(student.totalScore);
+    if (stage === 0) {
+      // Evolve from 0 to 1 visually
+      setEvolutionQueue(prev => [...prev, { studentName, pokemon: student.pokemon, oldStage: 0, newStage: 1 }]);
+    } else if (stage === 1) {
+      setEvolutionQueue(prev => [...prev, { studentName, pokemon: student.pokemon, oldStage: 1, newStage: 2 }]);
+    } else {
+      // Already max, replay last evolution
+      setEvolutionQueue(prev => [...prev, { studentName, pokemon: student.pokemon, oldStage: 1, newStage: 2 }]);
+    }
+  }, []);
+
+  const evolutionEvent = evolutionQueue.length > 0 ? evolutionQueue[0] : null;
 
   return {
     students, isLoading, lastUpdate,
@@ -524,6 +543,6 @@ export function useStudentData() {
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet, resetToMock,
-    evolutionEvent, clearEvolutionEvent,
+    evolutionEvent, clearEvolutionEvent, triggerEvolution,
   };
 }
