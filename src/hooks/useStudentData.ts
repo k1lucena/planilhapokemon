@@ -203,7 +203,7 @@ export function useStudentData() {
       name: s.name,
       pokemon: s.pokemon,
       type: s.type,
-      tasks: s.tasks,
+      tasks: s.tasks as any,
       total_score: s.totalScore,
     }));
     const { error } = await supabase.from('students').upsert(rows, { onConflict: 'name' });
