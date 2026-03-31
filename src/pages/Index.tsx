@@ -11,6 +11,7 @@ import { AdminPanel } from '@/components/AdminPanel';
 import { EvolutionAnimation } from '@/components/EvolutionAnimation';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
+import { PokeballIcon } from '@/components/PokeballIcon';
 
 const Index = () => {
   const {
