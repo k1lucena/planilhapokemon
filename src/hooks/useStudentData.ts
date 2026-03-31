@@ -77,10 +77,9 @@ function parseSheetData(text: string): Student[] {
       if (isSkipColumn(headers[i])) skipIndices.add(i);
     }
 
-    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
     for (let i = 0; i < headers.length; i++) {
       if (skipIndices.has(i)) continue;
-      if (headers[i] && (taskKeywords.some(k => headers[i].includes(k)) || /^\d+$/.test(headers[i]))) {
+      if (headers[i] && isTaskColumn(headers[i])) {
         taskIndices.push(i);
       }
     }
