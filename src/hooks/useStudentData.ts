@@ -5,8 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
-const SHEET_ID = '1Ym7XwuWa-Wm7zsbEsiKcQ6A3cvv9Z3UPby0O405k16g';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+function extractSheetId(url: string): string | null {
+  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
 
 function recalcTotal(student: Student): Student {
   return { ...student, totalScore: student.tasks.reduce((sum, t) => sum + t.score, 0) };
