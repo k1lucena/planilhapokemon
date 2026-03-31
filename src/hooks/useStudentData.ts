@@ -122,7 +122,6 @@ function parseCsvData(text: string): Student[] {
 
     const nameKey = findField(fields, compact => compact === 'nome' || compact.includes('aluno') || compact === 'name' || compact.includes('estudante'));
     const pokemonKey = findField(fields, compact => compact === 'pokemon' || compact === 'apokemon');
-    const typeKey = findField(fields, compact => compact === 'tipo' || compact === 'type');
 
     if (!nameKey) {
       toast.error('Coluna "NOME" não encontrada no CSV.');
