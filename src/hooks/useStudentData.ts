@@ -122,7 +122,6 @@ function parseCsvData(text: string): Student[] {
 
     const nameKey = findField(fields, compact => compact === 'nome' || compact.includes('aluno') || compact === 'name' || compact.includes('estudante'));
     const pokemonKey = findField(fields, compact => compact === 'pokemon' || compact === 'apokemon');
-    const typeKey = findField(fields, compact => compact === 'tipo' || compact === 'type');
 
     if (!nameKey) {
       toast.error('Coluna "NOME" não encontrada no CSV.');
@@ -132,7 +131,7 @@ function parseCsvData(text: string): Student[] {
     const notaKeys = fields.filter(isNotaColumn);
     console.log('[CSV] Colunas de nota:', notaKeys);
 
-    const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
+    const skipKeys = new Set([nameKey, pokemonKey].filter(Boolean) as string[]);
     for (const field of fields) {
       if (isSkipColumn(field) || isNotaColumn(field)) skipKeys.add(field);
     }
@@ -152,12 +151,12 @@ function parseCsvData(text: string): Student[] {
           score: parseNumericValue(row[key]),
         }));
         const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
-        const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
+        const type = inferPokemonType(pokemon);
 
         return {
           name: String(row[nameKey]).trim(),
           pokemon,
-          type: type || inferPokemonType(pokemon),
+          type,
           tasks,
           totalScore: tasks.reduce((sum, task) => sum + task.score, 0),
           ...extractNotasFromRow(notaKeys, row),
@@ -186,14 +185,10 @@ function parseSheetData(text: string): Student[] {
       const compact = compactHeader(header);
       return compact === 'pokemon' || compact === 'apokemon';
     });
-    const typeIdx = headers.findIndex(header => {
-      const compact = compactHeader(header);
-      return compact === 'tipo' || compact === 'type';
-    });
     if (nameIdx === -1) return [];
 
     const notaIndices: Array<{ index: number; slot: 1 | 2 | 3 }> = [];
-    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(index => index >= 0));
+    const skipIndices = new Set([nameIdx, pokemonIdx].filter(index => index >= 0));
 
     for (let i = 0; i < headers.length; i++) {
       const slot = getNotaSlot(headers[i]);
@@ -223,7 +218,7 @@ function parseSheetData(text: string): Student[] {
           score: parseNumericValue(row.c[index]?.v),
         }));
         const pokemon = pokemonIdx >= 0 ? String(row.c[pokemonIdx]?.v || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
-        const type = typeIdx >= 0 ? String(row.c[typeIdx]?.v || '').toLowerCase().trim() : inferPokemonType(pokemon);
+        const type = inferPokemonType(pokemon);
         const notas: NotaFields = { nota1: 0, nota2: 0, nota3: 0 };
 
         for (const { index, slot } of notaIndices) {
@@ -233,7 +228,7 @@ function parseSheetData(text: string): Student[] {
         return {
           name: String(row.c[nameIdx]?.v || '').trim(),
           pokemon,
-          type: type || inferPokemonType(pokemon),
+          type,
           tasks,
           totalScore: tasks.reduce((sum, task) => sum + task.score, 0),
           ...notas,
