@@ -131,7 +131,7 @@ function parseCsvData(text: string): Student[] {
     const notaKeys = fields.filter(isNotaColumn);
     console.log('[CSV] Colunas de nota:', notaKeys);
 
-    const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
+    const skipKeys = new Set([nameKey, pokemonKey].filter(Boolean) as string[]);
     for (const field of fields) {
       if (isSkipColumn(field) || isNotaColumn(field)) skipKeys.add(field);
     }
