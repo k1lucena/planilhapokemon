@@ -39,13 +39,9 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
       onClick={onClick}
     >
       <div className="p-4 flex flex-col items-center text-center">
-        <div className="w-20 h-20 mb-3 relative">
+        <div className="w-20 h-20 mb-2 relative">
           {sprite ? (
-            <img
-              src={sprite}
-              alt={currentName}
-              className="w-full h-full object-contain drop-shadow-md"
-            />
+            <img src={sprite} alt={currentName} className="w-full h-full object-contain drop-shadow-md" />
           ) : (
             <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground">
               {initials}
@@ -61,20 +57,19 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
 
         <p className="font-pixel text-sm text-primary mb-2">{student.totalScore} pts</p>
 
-        {/* Grades */}
-        <div className="w-full grid grid-cols-3 gap-1 mb-2 text-xs">
-          <div className="rounded bg-muted/50 py-1">
-            <span className="text-muted-foreground">N1</span>
-            <p className={`font-bold ${getGradeColor(grades.nota1)}`}>{grades.nota1}</p>
-          </div>
-          <div className="rounded bg-muted/50 py-1">
-            <span className="text-muted-foreground">N2</span>
-            <p className={`font-bold ${getGradeColor(grades.nota2)}`}>{grades.nota2}</p>
-          </div>
-          <div className="rounded bg-muted/50 py-1">
-            <span className="text-muted-foreground">N3</span>
-            <p className={`font-bold ${getGradeColor(grades.nota3)}`}>{grades.nota3}</p>
-          </div>
+        {/* Grades - 4 columns */}
+        <div className="w-full grid grid-cols-4 gap-1 mb-2 text-[10px]">
+          {[
+            { label: 'N1', value: grades.nota1 },
+            { label: 'N2', value: grades.nota2 },
+            { label: 'N3', value: grades.nota3 },
+            { label: 'Méd', value: grades.media },
+          ].map(g => (
+            <div key={g.label} className="rounded bg-muted/50 py-1 px-0.5">
+              <span className="text-muted-foreground">{g.label}</span>
+              <p className={`font-bold text-xs ${getGradeColor(g.value)}`}>{g.value}</p>
+            </div>
+          ))}
         </div>
 
         <div className="w-full">

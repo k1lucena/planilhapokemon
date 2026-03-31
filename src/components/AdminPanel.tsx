@@ -1,13 +1,14 @@
 import { useState, useRef } from 'react';
 import { Student, TYPE_LABELS } from '@/lib/types';
 import { StudentForm } from './StudentForm';
-import { TaskManager } from './TaskManager';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Pencil, UserPlus, Download, RotateCcw, FileSpreadsheet, FileJson, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Trash2, Pencil, UserPlus, RotateCcw, FileSpreadsheet, FileJson, FileText, Save } from 'lucide-react';
 
 interface AdminPanelProps {
   open: boolean;
@@ -35,8 +36,27 @@ export function AdminPanel({
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [sheetUrl, setSheetUrl] = useState('');
+  const [selectedStudentName, setSelectedStudentName] = useState<string>('');
+  const [editScores, setEditScores] = useState<number[]>([]);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedStudent = students.find(s => s.name === selectedStudentName);
+
+  const handleSelectStudent = (name: string) => {
+    setSelectedStudentName(name);
+    const s = students.find(st => st.name === name);
+    if (s) setEditScores(s.tasks.map(t => t.score));
+  };
+
+  const handleSaveScores = () => {
+    if (!selectedStudent) return;
+    selectedStudent.tasks.forEach((task, i) => {
+      if (editScores[i] !== task.score) {
+        onUpdateScore(selectedStudent.name, task.name, editScores[i]);
+      }
+    });
+  };
 
   const handleAdd = (data: { name: string; pokemon: string; type: string }) => {
     onAddStudent(data);
@@ -62,17 +82,66 @@ export function AdminPanel({
     <Sheet open={open} onOpenChange={v => !v && onClose()}>
       <SheetContent className="w-full sm:max-w-md bg-card border-border p-0 flex flex-col">
         <SheetHeader className="p-4 pb-2 border-b border-border">
-          <SheetTitle className="font-pixel text-primary text-sm tracking-wider">⚙️ Gerenciar Arena</SheetTitle>
+          <SheetTitle className="font-pixel text-primary text-sm tracking-wider">⚙️ Gerenciar</SheetTitle>
         </SheetHeader>
 
-        <Tabs defaultValue="students" className="flex-1 flex flex-col min-h-0">
+        <Tabs defaultValue="grades" className="flex-1 flex flex-col min-h-0">
           <TabsList className="mx-4 mt-2 bg-muted/50">
+            <TabsTrigger value="grades" className="text-xs flex-1">Notas</TabsTrigger>
             <TabsTrigger value="students" className="text-xs flex-1">Alunos</TabsTrigger>
-            <TabsTrigger value="tasks" className="text-xs flex-1">Tarefas</TabsTrigger>
             <TabsTrigger value="data" className="text-xs flex-1">Dados</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1">
+            {/* QUICK GRADES TAB */}
+            <TabsContent value="grades" className="p-4 space-y-4 mt-0">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Selecione o Aluno</Label>
+                <Select value={selectedStudentName} onValueChange={handleSelectStudent}>
+                  <SelectTrigger className="bg-muted/50">
+                    <SelectValue placeholder="Escolha um aluno..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {students.map(s => (
+                      <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedStudent && (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Edite todas as notas de <strong>{selectedStudent.name}</strong> abaixo:
+                  </p>
+
+                  <div className="space-y-1.5">
+                    {selectedStudent.tasks.map((task, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground flex-1 truncate">{task.name}</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={1000}
+                          value={editScores[i] ?? 0}
+                          onChange={e => {
+                            const newScores = [...editScores];
+                            newScores[i] = Math.max(0, Number(e.target.value) || 0);
+                            setEditScores(newScores);
+                          }}
+                          className="w-20 h-8 text-sm bg-muted/50 border-border text-center"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button onClick={handleSaveScores} className="w-full gap-2" size="sm">
+                    <Save className="h-4 w-4" /> Salvar Notas
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
             {/* STUDENTS TAB */}
             <TabsContent value="students" className="p-4 space-y-3 mt-0">
               {showForm || editingStudent ? (
@@ -107,17 +176,12 @@ export function AdminPanel({
               )}
             </TabsContent>
 
-            {/* TASKS TAB */}
-            <TabsContent value="tasks" className="p-4 mt-0">
-              <TaskManager students={students} onAddTask={onAddTask} onRemoveTask={onRemoveTask} onUpdateScore={onUpdateScore} />
-            </TabsContent>
-
             {/* DATA TAB */}
             <TabsContent value="data" className="p-4 space-y-4 mt-0">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">Importar dados</p>
                 <p className="text-xs text-muted-foreground">Substitui todos os dados atuais pela fonte importada.</p>
-                
+
                 <div className="space-y-1.5">
                   <Input
                     placeholder="Cole o link da planilha do Google Sheets"
