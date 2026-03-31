@@ -1,80 +1,62 @@
 
 
-## Refatorar para App Moderno com Gamificação de Batalhas
+## Painel de Gerenciamento Local (CRUD de Alunos e Tarefas)
 
-### 1. Tema Escuro e Visual Moderno
-- Reescrever as variáveis CSS em `src/index.css` para tema escuro como padrão (backgrounds escuros, cards com glassmorphism/bordas neon sutis)
-- Remover o fundo pokeball-bg, substituir por gradiente escuro sutil
-- Atualizar cores: primary mais vibrante, cards com fundo semi-transparente, bordas com glow
-- Adicionar novas animações ao `tailwind.config.ts`: fade-in, scale-in, pulse para status
+### Visão Geral
+Adicionar um painel de administração dentro do app para criar, editar e excluir alunos e tarefas, usando **localStorage** como banco de dados local. O Google Sheets passa a ser apenas uma fonte de importação inicial opcional.
 
-### 2. Sistema de Batalha por Tipo (`src/lib/battleSystem.ts`)
-- Criar tabela de vantagens de tipo (fire > grass > water > fire, electric > water, psychic > fighting, etc.)
-- Função `simulateBattle(studentA, studentB)` que compara pontuação ajustada por vantagem de tipo (+10% se vantagem, -10% se desvantagem)
-- Função `generateBattleResults(students)` que simula confrontos entre todos os alunos e retorna wins/losses por aluno
-- Função `getPlayerStatus(student, previousScore?)`: retorna "Em alta" (top 3), "Subindo" (acima da média), "Estagnado" (abaixo da média)
+### Arquitetura de Dados
 
-### 3. Atualizar Types (`src/lib/types.ts`)
-- Adicionar interfaces: `BattleResult`, `PlayerStatus`
-- Adicionar tipo para status do jogador: `'hot' | 'rising' | 'cold'`
+- **localStorage** armazena os alunos como JSON (`pokedex-arena-students`)
+- Na primeira visita, carrega os dados mock como base inicial
+- Botão opcional "Importar do Sheets" para puxar dados da planilha uma vez
+- Todas as alterações (add/edit/delete aluno, add/edit tarefa) persistem no localStorage
 
-### 4. Arena/Pódio Redesenhado (`src/components/Podium.tsx`)
-- Visual de arena de batalha com fundo gradiente escuro
-- Top 3 como "campeões" com glow no tipo, animação de entrada
-- Mostrar status do jogador e contagem de vitórias em batalhas
+### Novos Componentes
 
-### 5. Cards dos Jogadores (`src/components/StudentCard.tsx`)
-- Redesign escuro: fundo com gradiente sutil baseado no tipo, borda com glow
-- Mostrar iniciais do aluno em avatar circular quando sem sprite
-- Adicionar badge de status (🔥 Em alta / ⚡ Subindo / ❄️ Estagnado)
-- Contagem de vitórias em batalhas
-- Animação hover com scale e glow intensificado
+**1. `src/components/AdminPanel.tsx`** — Painel lateral (Sheet/Drawer) acessível por botão no header
+- Lista de alunos com opções de editar/excluir
+- Botão "Adicionar Aluno" abre formulário
+- Seção de gerenciamento de tarefas (adicionar nova tarefa para todos)
+- Botão "Importar do Sheets" (importação única)
 
-### 6. Modal Pokédex Atualizado (`src/components/PokedexModal.tsx`)
-- Visual escuro estilo app de jogo
-- Adicionar seção "Batalhas Recentes" com lista de confrontos simulados (vs quem, resultado, vantagem de tipo)
-- Feedback visual: verde para vitória, vermelho para derrota
-- Manter seções existentes (evolução, progresso, tarefas)
+**2. `src/components/StudentForm.tsx`** — Formulário para adicionar/editar aluno
+- Campos: Nome, Pokémon (com autocomplete da PokéAPI), Tipo (select com tipos disponíveis)
+- Validação: nome obrigatório, pokémon obrigatório
+- Modo criação e edição
 
-### 7. Rankings Atualizados (`src/components/Rankings.tsx`)
-- Adicionar terceira aba: "Batalhas" com ranking por número de vitórias
-- Visual escuro nos cards de ranking por tipo
-- Remover aparência de tabela tradicional, usar cards estilizados
+**3. `src/components/TaskManager.tsx`** — Gerenciar tarefas/pontuações
+- Adicionar nova tarefa (nome + pontuação por aluno)
+- Editar pontuação de tarefas existentes por aluno
+- Excluir tarefa de todos os alunos
 
-### 8. Página Principal (`src/pages/Index.tsx`)
-- Integrar o sistema de batalha (chamar `generateBattleResults`)
-- Passar dados de batalha para os componentes
-- Header redesenhado com visual de app/game
+### Modificações em Arquivos Existentes
+
+**`src/hooks/useStudentData.ts`** — Refatorar para:
+- Ler/escrever do localStorage como fonte principal
+- Expor funções: `addStudent`, `removeStudent`, `updateStudent`, `addTask`, `updateTaskScore`, `removeTask`, `importFromSheet`
+- Manter `refetch` apenas para importação manual do Sheets
+- Auto-recalcular `totalScore` ao modificar tarefas
+
+**`src/pages/Index.tsx`**:
+- Adicionar botão "Gerenciar" no header que abre o AdminPanel
+- Passar funções CRUD para o painel
+
+### Fluxo do Usuário
+
+1. App abre com dados mock no localStorage (primeira vez) ou dados salvos
+2. Clica em "Gerenciar" no header → abre painel lateral
+3. Pode adicionar aluno (nome, pokémon, tipo) → aparece no grid
+4. Pode excluir aluno → some do grid
+5. Pode adicionar tarefa → nova coluna de pontuação para todos
+6. Pode editar pontuação individual por aluno/tarefa
+7. Opcionalmente importa do Sheets uma vez para popular dados reais
 
 ### Detalhes Técnicos
 
-**Tabela de tipos simplificada:**
-```text
-fire > grass, bug, ice, steel
-water > fire, ground, rock
-grass > water, ground, rock
-electric > water, flying
-psychic > fighting, poison
-fighting > normal, rock, ice, dark, steel
-dragon > dragon
-ice > grass, ground, flying, dragon
-ghost > psychic, ghost
-dark > psychic, ghost
-fairy > fighting, dragon, dark
-```
-
-**Simulação de batalha:**
-- Comparar pontuação de A vs B
-- Se A tem vantagem de tipo sobre B: pontuação de A * 1.1
-- Se A tem desvantagem: pontuação de A * 0.9
-- Maior pontuação ajustada vence
-- Gerar 3-5 batalhas recentes por aluno para exibir no modal
-
-**Status do jogador:**
-- 🔥 "Em alta": top 25% do ranking
-- ⚡ "Subindo": entre 25% e 60%
-- ❄️ "Estagnado": abaixo de 60%
-
-**Arquivos a criar:** `src/lib/battleSystem.ts`
-**Arquivos a modificar:** `src/lib/types.ts`, `src/index.css`, `tailwind.config.ts`, `src/pages/Index.tsx`, `src/components/Podium.tsx`, `src/components/StudentCard.tsx`, `src/components/PokedexModal.tsx`, `src/components/Rankings.tsx`
+- localStorage key: `pokedex-arena-students`
+- Validação com verificação de nome duplicado
+- Select de tipo com todas as 18 opções da `TYPE_COLORS`
+- Input de pokémon como texto livre (lowercase, trim)
+- totalScore sempre recalculado: `tasks.reduce((sum, t) => sum + t.score, 0)`
 
