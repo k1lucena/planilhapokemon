@@ -118,10 +118,27 @@ export function AdminPanel({
                 <p className="text-sm font-medium text-foreground">Importar dados</p>
                 <p className="text-xs text-muted-foreground">Substitui todos os dados atuais pela fonte importada.</p>
                 
-                <Button onClick={onImportSheet} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  {isLoading ? 'Importando...' : 'Google Sheets'}
-                </Button>
+                <div className="space-y-1.5">
+                  <Input
+                    placeholder="Cole o link da planilha do Google Sheets"
+                    value={sheetUrl}
+                    onChange={e => setSheetUrl(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    A planilha deve estar publicada na web (Arquivo → Compartilhar → Publicar na Web)
+                  </p>
+                  <Button
+                    onClick={() => { onImportSheet(sheetUrl); setSheetUrl(''); }}
+                    disabled={isLoading || !sheetUrl.trim()}
+                    variant="outline"
+                    className="w-full gap-2"
+                    size="sm"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    {isLoading ? 'Importando...' : 'Importar Google Sheets'}
+                  </Button>
+                </div>
 
                 <Button onClick={() => csvInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
                   <FileText className="h-4 w-4" />

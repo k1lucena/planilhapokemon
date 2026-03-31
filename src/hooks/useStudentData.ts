@@ -331,21 +331,29 @@ export function useStudentData() {
     }
   }, []);
 
-  const importFromSheet = useCallback(async () => {
+  const importFromSheet = useCallback(async (sheetUrl: string) => {
     setIsLoading(true);
     try {
+      const sheetId = extractSheetId(sheetUrl);
+      if (!sheetId) {
+        toast.error('URL inválida. Cole o link da planilha do Google Sheets.');
+        setIsLoading(false);
+        return;
+      }
+
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', {
-        body: { url: SHEET_URL },
+        body: { url: csvUrl },
       });
 
       if (fnError) throw new Error(fnError.message || 'Erro na edge function');
 
-      // fnData is the raw text from the sheet
       const text = typeof fnData === 'string' ? fnData : JSON.stringify(fnData);
-      const parsed = parseSheetData(text);
+      const parsed = parseCsvData(text);
 
       if (parsed.length === 0) {
-        toast.error('Formato não reconhecido. Verifique as colunas da planilha.');
+        toast.error('Nenhum aluno encontrado. Verifique se a planilha está publicada na web e possui uma coluna "Nome".');
         setIsLoading(false);
         return;
       }
