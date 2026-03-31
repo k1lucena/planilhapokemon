@@ -93,11 +93,11 @@ export interface StudentGrades {
 
 export function calculateGrades(tasks: StudentTask[]): StudentGrades {
   const scores = tasks.map(t => t.score);
-  const nota1 = scores.length >= 5 ? scores.slice(0, 5).reduce((a, b) => a + b, 0) / 5 : 0;
-  const nota2 = scores.length >= 10 ? scores.slice(5, 10).reduce((a, b) => a + b, 0) / 5 : 0;
+  const nota1 = scores.length >= 5 ? scores.slice(0, 5).reduce((a, b) => a + b, 0) : 0;
+  const nota2 = scores.length >= 10 ? scores.slice(5, 10).reduce((a, b) => a + b, 0) : 0;
   const nota3 = scores.length >= 11 ? scores[10] : 0;
-  const media = (nota1 + nota2 + nota3) / 3;
-  return { nota1: +nota1.toFixed(1), nota2: +nota2.toFixed(1), nota3: +nota3.toFixed(1), media: +media.toFixed(1) };
+  const media = +(((nota1 + nota2 + nota3) / 3).toFixed(1));
+  return { nota1, nota2, nota3, media };
 }
 
 export function getGradeColor(grade: number): string {

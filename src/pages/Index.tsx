@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useStudentData } from '@/hooks/useStudentData';
 import { usePokemonData } from '@/hooks/usePokemonData';
 import { Student } from '@/lib/types';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Settings } from 'lucide-react';
 import { Podium } from '@/components/Podium';
 import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
@@ -10,7 +10,6 @@ import { Rankings } from '@/components/Rankings';
 import { AdminPanel } from '@/components/AdminPanel';
 import { EvolutionAnimation } from '@/components/EvolutionAnimation';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
 import { PokeballIcon } from '@/components/PokeballIcon';
 
 const Index = () => {
@@ -32,24 +31,30 @@ const Index = () => {
 
   return (
     <div className="min-h-screen game-bg">
-      <header className="sticky top-0 z-50 py-4 px-4 shadow-lg border-b border-border/50" style={{ background: 'linear-gradient(180deg, hsl(230 15% 10%) 0%, hsl(230 15% 8% / 0.95) 100%)', backdropFilter: 'blur(16px)' }}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      {/* Pokédex Header */}
+      <header className="sticky top-0 z-50 pokedex-frame rounded-none border-x-0 border-t-0">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 py-3 px-4">
           <div className="flex items-center gap-3">
-            <PokeballIcon size={32} className="animate-float" />
-            <h1 className="font-pixel text-xs md:text-sm tracking-wider text-foreground">
+            <div className="pokedex-lens animate-pulse-glow" />
+            <div className="flex gap-1.5 ml-2">
+              <div className="pokedex-led pokedex-led-red" />
+              <div className="pokedex-led pokedex-led-yellow" />
+              <div className="pokedex-led pokedex-led-green" />
+            </div>
+            <h1 className="font-pixel text-[10px] md:text-xs tracking-wider text-primary-foreground ml-3">
               Pokédex Acadêmica
             </h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground hidden sm:inline">
+            <span className="text-[10px] text-primary-foreground/60 hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
-            <Button variant="outline" size="sm" onClick={refreshFromSheet} disabled={isLoading} className="gap-1">
+            <Button variant="secondary" size="sm" onClick={refreshFromSheet} disabled={isLoading} className="gap-1 h-7 text-xs">
               <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Atualizar</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
+            <Button variant="secondary" size="sm" onClick={() => setAdminOpen(true)} className="gap-1 h-7 text-xs">
               <Settings className="h-3 w-3" />
               <span className="hidden sm:inline">Gerenciar</span>
             </Button>
@@ -68,7 +73,7 @@ const Index = () => {
 
         <section>
           <h2 className="text-center text-lg md:text-xl font-bold text-foreground mb-1">
-            Treinadores
+            🎮 Treinadores
           </h2>
           <p className="text-center text-muted-foreground text-sm mb-6">Acompanhe o progresso de cada aluno</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -87,7 +92,10 @@ const Index = () => {
       </main>
 
       <footer className="border-t border-border bg-card/50 text-center py-4 mt-12">
-        <p className="text-xs text-muted-foreground">Pokédex Acadêmica © {new Date().getFullYear()}</p>
+        <div className="flex items-center justify-center gap-2">
+          <PokeballIcon size={16} />
+          <p className="text-xs text-muted-foreground">Pokédex Acadêmica © {new Date().getFullYear()}</p>
+        </div>
       </footer>
 
       <PokedexModal
