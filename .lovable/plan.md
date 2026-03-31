@@ -1,42 +1,37 @@
 
 
-## Auto-refresh + Corrigir notas + Animações
+## Extrair N1/N2/N3 diretamente das colunas "Soma 1", "Soma 2" e "Trabalho Final"
 
-### 1. Auto-refresh a cada 5 minutos
-**`src/hooks/useStudentData.ts`**: Adicionar `useEffect` com `setInterval` de 5 minutos que chama `refreshFromSheet`. Limpar no cleanup.
+### Mudança principal
 
-### 2. Corrigir cálculo de notas
-**Problema**: `calculateGrades` divide por 5 fazendo média dos scores brutos (que vão de 0 a 40), resultando em valores sem sentido como "N1: 7" quando deveria ser a soma dos pontos.
+Em vez de importar atividades individuais e recalcular somas, o parser agora vai buscar **diretamente** os valores das colunas "Soma 1", "Soma 2" e "Trabalho Final" da planilha. Atividades individuais não serão importadas.
 
-**Correção em `src/lib/types.ts`**: As notas devem ser a **soma** dos scores do grupo, não média:
-- **N1** = soma atividades 01-05 (máx ~45 pts)
-- **N2** = soma atividades 06-10 (máx ~135 pts)  
-- **N3** = Projeto Final (máx ~100 pts)
-- **Total** = N1 + N2 + N3 (já é o `totalScore`)
+### Modelo de dados
 
-Ajustar `getGradeColor` para usar thresholds proporcionais aos máximos de cada nota, ou simplesmente exibir as notas como pontuação sem colorir por "aprovação".
+O array `tasks` de cada aluno passará a ter exatamente **3 itens fixos**:
+- `{ name: "N1", score: <valor de "Soma 1"> }`
+- `{ name: "N2", score: <valor de "Soma 2"> }`
+- `{ name: "N3", score: <valor de "Trabalho Final"> }`
 
-### 3. Animações nos cards dos treinadores
-**`tailwind.config.ts`** + **`src/components/StudentCard.tsx`**:
-- Adicionar keyframe `bounce-gentle` (leve bounce sutil no idle)
-- Cards com animação de entrada escalonada (`animation-delay` por índice)
-- Hover: leve rotação 3D + escala + sombra glow mais intensa
-
-### 4. Animações diferenciadas no hover do Top 3
-**`src/components/Podium.tsx`** + **`src/index.css`**:
-- **1º lugar**: Hover com pulse dourado + escala maior (1.15) + rotação sutil
-- **2º lugar**: Hover com brilho prateado + escala (1.1)  
-- **3º lugar**: Hover com brilho bronze + escala (1.08)
-- Cada posição terá uma classe CSS específica com transition diferente
+O `totalScore` = N1 + N2 + N3.
 
 ### Arquivos a alterar
 
 | Arquivo | Mudança |
 |---|---|
-| `src/hooks/useStudentData.ts` | setInterval 5min para refreshFromSheet |
-| `src/lib/types.ts` | Notas = soma (não média), ajustar thresholds de cor |
-| `tailwind.config.ts` | Keyframes: bounce-gentle, podium-hover |
-| `src/components/StudentCard.tsx` | Animação de entrada escalonada + hover 3D |
-| `src/components/Podium.tsx` | Hover diferenciado por posição (gold/silver/bronze) |
-| `src/index.css` | Classes CSS para animações do podium |
+| `src/hooks/useStudentData.ts` | No `parseCsvData` e `parseSheetData`: buscar colunas "soma 1", "soma 2", "trabalho final" por nome. Ignorar colunas de atividade, média, total. Gerar 3 tasks fixas (N1/N2/N3). Também buscar coluna "matricula" opcionalmente. |
+| `src/lib/types.ts` | `calculateGrades`: ler diretamente os 3 tasks por nome (N1/N2/N3) em vez de fatiar por índice. Media = soma dos 3. |
+| `src/components/PokedexModal.tsx` | Remover lógica de `slice(0,5)`, `slice(5,10)`, `tasks[10]`. Usar `grades.nota1/nota2/nota3` diretamente. Simplificar a tab de notas para mostrar N1, N2, N3 sem listar atividades individuais. |
+| `src/components/AdminPanel.tsx` | Ajustar editor de notas rápidas para mostrar apenas 3 campos (N1, N2, N3) em vez de 11 atividades. |
+
+### Lógica de detecção de colunas no CSV
+
+```text
+"Soma 1"         → N1
+"Soma 2"         → N2  
+"Trabalho Final" → N3
+"Matrícula"      → matricula (armazenado no nome ou ignorado)
+
+Ignorar: "Média", "Total", "Atividade *", qualquer outra coluna
+```
 
