@@ -218,7 +218,7 @@ function parseSheetData(text: string): Student[] {
           score: parseNumericValue(row.c[index]?.v),
         }));
         const pokemon = pokemonIdx >= 0 ? String(row.c[pokemonIdx]?.v || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
-        const type = typeIdx >= 0 ? String(row.c[typeIdx]?.v || '').toLowerCase().trim() : inferPokemonType(pokemon);
+        const type = inferPokemonType(pokemon);
         const notas: NotaFields = { nota1: 0, nota2: 0, nota3: 0 };
 
         for (const { index, slot } of notaIndices) {
