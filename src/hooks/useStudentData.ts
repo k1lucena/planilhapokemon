@@ -188,7 +188,7 @@ function parseSheetData(text: string): Student[] {
     if (nameIdx === -1) return [];
 
     const notaIndices: Array<{ index: number; slot: 1 | 2 | 3 }> = [];
-    const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(index => index >= 0));
+    const skipIndices = new Set([nameIdx, pokemonIdx].filter(index => index >= 0));
 
     for (let i = 0; i < headers.length; i++) {
       const slot = getNotaSlot(headers[i]);
