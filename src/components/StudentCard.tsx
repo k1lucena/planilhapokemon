@@ -1,4 +1,4 @@
-import { Student, PokemonData, getEvolutionStage, getProgressToNextEvolution, TYPE_COLORS, TYPE_LABELS, calculateGrades, getGradeColor } from '@/lib/types';
+import { Student, PokemonData, getEvolutionStage, getProgressToNextEvolution, TYPE_COLORS, TYPE_LABELS, getMediaFromNotas, getGradeColor } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
 
 interface Props {
@@ -21,7 +21,7 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
   const typeClass = TYPE_COLORS[student.type] || 'type-normal';
   const glowClass = GLOW_CLASSES[student.type] || '';
   const typeLabel = TYPE_LABELS[student.type] || student.type;
-  const grades = calculateGrades(student.tasks);
+  const media = getMediaFromNotas(student.nota1, student.nota2, student.nota3);
 
   const sprite = pokemonData
     ? (pokemonData.evolutions[Math.min(stage, pokemonData.evolutions.length - 1)]?.sprite || pokemonData.sprite)
@@ -41,11 +41,7 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
       <div className="p-4 flex flex-col items-center text-center">
         <div className="w-20 h-20 mb-3 relative">
           {sprite ? (
-            <img
-              src={sprite}
-              alt={currentName}
-              className="w-full h-full object-contain drop-shadow-md"
-            />
+            <img src={sprite} alt={currentName} className="w-full h-full object-contain drop-shadow-md" />
           ) : (
             <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground">
               {initials}
@@ -59,23 +55,22 @@ export function StudentCard({ student, pokemonData, onClick }: Props) {
           {typeLabel}
         </span>
 
-        <p className="font-pixel text-sm text-primary mb-2">{student.totalScore} pts</p>
-
-        {/* Grades */}
         <div className="w-full grid grid-cols-3 gap-1 mb-2 text-xs">
           <div className="rounded bg-muted/50 py-1">
             <span className="text-muted-foreground">N1</span>
-            <p className={`font-bold ${getGradeColor(grades.nota1)}`}>{grades.nota1}</p>
+            <p className={`font-bold ${getGradeColor(student.nota1)}`}>{student.nota1}</p>
           </div>
           <div className="rounded bg-muted/50 py-1">
             <span className="text-muted-foreground">N2</span>
-            <p className={`font-bold ${getGradeColor(grades.nota2)}`}>{grades.nota2}</p>
+            <p className={`font-bold ${getGradeColor(student.nota2)}`}>{student.nota2}</p>
           </div>
           <div className="rounded bg-muted/50 py-1">
             <span className="text-muted-foreground">N3</span>
-            <p className={`font-bold ${getGradeColor(grades.nota3)}`}>{grades.nota3}</p>
+            <p className={`font-bold ${getGradeColor(student.nota3)}`}>{student.nota3}</p>
           </div>
         </div>
+
+        <p className={`text-xs font-bold mb-2 ${getGradeColor(media)}`}>Média: {media}</p>
 
         <div className="w-full">
           <Progress value={progress} className="h-2" />

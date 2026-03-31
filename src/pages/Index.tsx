@@ -15,7 +15,7 @@ import { PokeballIcon } from '@/components/PokeballIcon';
 const Index = () => {
   const {
     students, isLoading, lastUpdate,
-    addStudent, removeStudent, updateStudent,
+    addStudent, removeStudent, updateStudent, updateNotas,
     addTask, removeTask, updateTaskScore,
     importFromSheet, importFromCsv, importFromJson,
     refreshFromSheet,
@@ -31,7 +31,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen game-bg">
-      {/* Pokédex Header */}
       <header className="sticky top-0 z-50 pokedex-frame rounded-none border-x-0 border-t-0">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 py-3 px-4">
           <div className="flex items-center gap-3">
@@ -45,7 +44,6 @@ const Index = () => {
               Pokédex Acadêmica
             </h1>
           </div>
-
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-primary-foreground/60 hidden sm:inline">
               {lastUpdate.toLocaleTimeString('pt-BR')}
@@ -64,30 +62,18 @@ const Index = () => {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {(isLoading || pokemonLoading) && students.length === 0 && (
-          <div className="text-center py-4 text-muted-foreground text-sm animate-pulse">
-            Carregando dados...
-          </div>
+          <div className="text-center py-4 text-muted-foreground text-sm animate-pulse">Carregando dados...</div>
         )}
-
         <Podium students={sorted} pokemonMap={pokemonMap} onSelect={setSelectedStudent} />
-
         <section>
-          <h2 className="text-center text-lg md:text-xl font-bold text-foreground mb-1">
-            🎮 Treinadores
-          </h2>
+          <h2 className="text-center text-lg md:text-xl font-bold text-foreground mb-1">🎮 Treinadores</h2>
           <p className="text-center text-muted-foreground text-sm mb-6">Acompanhe o progresso de cada aluno</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {sorted.map(student => (
-              <StudentCard
-                key={student.name}
-                student={student}
-                pokemonData={pokemonMap.get(student.pokemon)}
-                onClick={() => setSelectedStudent(student)}
-              />
+              <StudentCard key={student.name} student={student} pokemonData={pokemonMap.get(student.pokemon)} onClick={() => setSelectedStudent(student)} />
             ))}
           </div>
         </section>
-
         <Rankings students={students} onSelect={setSelectedStudent} />
       </main>
 
@@ -98,12 +84,7 @@ const Index = () => {
         </div>
       </footer>
 
-      <PokedexModal
-        student={selectedStudent}
-        pokemonData={selectedStudent ? pokemonMap.get(selectedStudent.pokemon) : undefined}
-        open={!!selectedStudent}
-        onClose={() => setSelectedStudent(null)}
-      />
+      <PokedexModal student={selectedStudent} pokemonData={selectedStudent ? pokemonMap.get(selectedStudent.pokemon) : undefined} open={!!selectedStudent} onClose={() => setSelectedStudent(null)} />
 
       <AdminPanel
         open={adminOpen}
@@ -112,6 +93,7 @@ const Index = () => {
         onAddStudent={addStudent}
         onRemoveStudent={removeStudent}
         onUpdateStudent={updateStudent}
+        onUpdateNotas={updateNotas}
         onAddTask={addTask}
         onRemoveTask={removeTask}
         onUpdateScore={updateTaskScore}
@@ -122,9 +104,7 @@ const Index = () => {
         isLoading={isLoading}
       />
 
-      {evolutionEvent && (
-        <EvolutionAnimation event={evolutionEvent} onComplete={clearEvolutionEvent} />
-      )}
+      {evolutionEvent && <EvolutionAnimation event={evolutionEvent} onComplete={clearEvolutionEvent} />}
     </div>
   );
 };

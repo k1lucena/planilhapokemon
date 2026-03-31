@@ -18,6 +18,7 @@ interface AdminPanelProps {
   onAddStudent: (student: { name: string; pokemon: string; type: string }) => void;
   onRemoveStudent: (name: string) => void;
   onUpdateStudent: (originalName: string, updates: Partial<Pick<Student, 'name' | 'pokemon' | 'type'>>) => void;
+  onUpdateNotas: (studentName: string, nota1: number, nota2: number, nota3: number) => void;
   onAddTask: (taskName: string) => void;
   onRemoveTask: (taskName: string) => void;
   onUpdateScore: (studentName: string, taskName: string, score: number) => void;
@@ -30,7 +31,7 @@ interface AdminPanelProps {
 
 export function AdminPanel({
   open, onClose, students,
-  onAddStudent, onRemoveStudent, onUpdateStudent,
+  onAddStudent, onRemoveStudent, onUpdateStudent, onUpdateNotas,
   onAddTask, onRemoveTask, onUpdateScore,
   onImportSheet, onImportCsv, onImportJson, onReset, isLoading,
 }: AdminPanelProps) {
@@ -40,26 +41,20 @@ export function AdminPanel({
   const csvInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
-  // Quick grades state
   const [selectedStudent, setSelectedStudent] = useState<string>('');
-  const [quickScores, setQuickScores] = useState<number[]>([]);
+  const [quickNotas, setQuickNotas] = useState<[number, number, number]>([0, 0, 0]);
 
   const handleSelectStudent = (name: string) => {
     const s = students.find(st => st.name === name);
     if (s) {
       setSelectedStudent(name);
-      setQuickScores(s.tasks.map(t => t.score));
+      setQuickNotas([s.nota1, s.nota2, s.nota3]);
     }
   };
 
-  const handleSaveQuickScores = async () => {
-    const s = students.find(st => st.name === selectedStudent);
-    if (!s) return;
-    for (let i = 0; i < s.tasks.length; i++) {
-      if (s.tasks[i].score !== quickScores[i]) {
-        await onUpdateScore(selectedStudent, s.tasks[i].name, quickScores[i]);
-      }
-    }
+  const handleSaveNotas = () => {
+    if (!selectedStudent) return;
+    onUpdateNotas(selectedStudent, quickNotas[0], quickNotas[1], quickNotas[2]);
     toast.success(`Notas de ${selectedStudent} salvas!`);
   };
 
@@ -77,13 +72,8 @@ export function AdminPanel({
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>, handler: (file: File) => void) => {
     const file = e.target.files?.[0];
-    if (file) {
-      handler(file);
-      e.target.value = '';
-    }
+    if (file) { handler(file); e.target.value = ''; }
   };
-
-  const currentStudent = students.find(s => s.name === selectedStudent);
 
   return (
     <Sheet open={open} onOpenChange={v => !v && onClose()}>
@@ -116,87 +106,28 @@ export function AdminPanel({
                 </Select>
               </div>
 
-              {currentStudent && quickScores.length > 0 && (
+              {selectedStudent && (
                 <div className="space-y-3">
-                  {/* N1 */}
-                  <div className="rounded-lg border border-border overflow-hidden">
-                    <div className="bg-muted/50 px-3 py-1.5">
-                      <span className="text-xs font-bold">N1 — Atividades 01-05</span>
+                  {['Nota 1', 'Nota 2', 'Nota 3'].map((label, idx) => (
+                    <div key={label} className="flex items-center gap-3">
+                      <Label className="text-sm w-16">{label}</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        value={quickNotas[idx]}
+                        onChange={e => {
+                          const v = [...quickNotas] as [number, number, number];
+                          v[idx] = Math.max(0, Number(e.target.value) || 0);
+                          setQuickNotas(v);
+                        }}
+                        className="h-9 bg-background border-border text-center"
+                      />
                     </div>
-                    <div className="p-2 space-y-1.5">
-                      {currentStudent.tasks.slice(0, 5).map((task, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground flex-1 truncate">{task.name}</span>
-                          <Input
-                            type="number"
-                            min={0}
-                            max={1000}
-                            value={quickScores[i]}
-                            onChange={e => {
-                              const v = [...quickScores];
-                              v[i] = Math.max(0, Number(e.target.value) || 0);
-                              setQuickScores(v);
-                            }}
-                            className="w-20 h-7 text-xs bg-background border-border text-center"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
 
-                  {/* N2 */}
-                  <div className="rounded-lg border border-border overflow-hidden">
-                    <div className="bg-muted/50 px-3 py-1.5">
-                      <span className="text-xs font-bold">N2 — Atividades 06-10</span>
-                    </div>
-                    <div className="p-2 space-y-1.5">
-                      {currentStudent.tasks.slice(5, 10).map((task, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground flex-1 truncate">{task.name}</span>
-                          <Input
-                            type="number"
-                            min={0}
-                            max={1000}
-                            value={quickScores[i + 5]}
-                            onChange={e => {
-                              const v = [...quickScores];
-                              v[i + 5] = Math.max(0, Number(e.target.value) || 0);
-                              setQuickScores(v);
-                            }}
-                            className="w-20 h-7 text-xs bg-background border-border text-center"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* N3 */}
-                  {currentStudent.tasks.length > 10 && (
-                    <div className="rounded-lg border border-border overflow-hidden">
-                      <div className="bg-muted/50 px-3 py-1.5">
-                        <span className="text-xs font-bold">N3 — Projeto Final</span>
-                      </div>
-                      <div className="p-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground flex-1 truncate">{currentStudent.tasks[10].name}</span>
-                          <Input
-                            type="number"
-                            min={0}
-                            max={1000}
-                            value={quickScores[10]}
-                            onChange={e => {
-                              const v = [...quickScores];
-                              v[10] = Math.max(0, Number(e.target.value) || 0);
-                              setQuickScores(v);
-                            }}
-                            className="w-20 h-7 text-xs bg-background border-border text-center"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button onClick={handleSaveQuickScores} className="w-full gap-2" size="sm">
+                  <Button onClick={handleSaveNotas} className="w-full gap-2" size="sm">
                     <Save className="h-4 w-4" /> Salvar Notas
                   </Button>
                 </div>
@@ -222,7 +153,7 @@ export function AdminPanel({
                       <div key={s.name} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2.5 border border-border">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {TYPE_LABELS[s.type] || s.type} · {s.totalScore}pts</p>
+                          <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {TYPE_LABELS[s.type] || s.type}</p>
                         </div>
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingStudent(s)}>
                           <Pencil className="h-3.5 w-3.5" />
@@ -241,53 +172,25 @@ export function AdminPanel({
             <TabsContent value="data" className="p-4 space-y-4 mt-0">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">Importar dados</p>
-                <p className="text-xs text-muted-foreground">Substitui todos os dados atuais.</p>
-                
                 <div className="space-y-1.5">
-                  <Input
-                    placeholder="Cole o link da planilha do Google Sheets"
-                    value={sheetUrl}
-                    onChange={e => setSheetUrl(e.target.value)}
-                    className="text-xs h-8"
-                  />
-                  <p className="text-[10px] text-muted-foreground">
-                    A planilha deve estar publicada na web (Arquivo → Publicar na Web)
-                  </p>
-                  <Button
-                    onClick={() => { onImportSheet(sheetUrl); }}
-                    disabled={isLoading || !sheetUrl.trim()}
-                    variant="outline"
-                    className="w-full gap-2"
-                    size="sm"
-                  >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    {isLoading ? 'Importando...' : 'Importar Google Sheets'}
+                  <Input placeholder="Cole o link da planilha" value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} className="text-xs h-8" />
+                  <Button onClick={() => onImportSheet(sheetUrl)} disabled={isLoading || !sheetUrl.trim()} variant="outline" className="w-full gap-2" size="sm">
+                    <FileSpreadsheet className="h-4 w-4" /> {isLoading ? 'Importando...' : 'Importar Google Sheets'}
                   </Button>
                 </div>
-
                 <Button onClick={() => csvInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
-                  <FileText className="h-4 w-4" />
-                  Importar CSV
+                  <FileText className="h-4 w-4" /> Importar CSV
                 </Button>
                 <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={e => handleFileImport(e, onImportCsv)} />
-
                 <Button onClick={() => jsonInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
-                  <FileJson className="h-4 w-4" />
-                  Importar JSON
+                  <FileJson className="h-4 w-4" /> Importar JSON
                 </Button>
                 <input ref={jsonInputRef} type="file" accept=".json" className="hidden" onChange={e => handleFileImport(e, onImportJson)} />
               </div>
-
-              <div className="space-y-2 pt-4 border-t border-border">
+              <div className="pt-4 border-t border-border">
                 <Button onClick={onReset} variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" size="sm">
                   <RotateCcw className="h-4 w-4" /> Resetar para Demo
                 </Button>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs text-muted-foreground">
-                  {students.length} alunos · {students[0]?.tasks.length || 0} tarefas
-                </p>
               </div>
             </TabsContent>
           </ScrollArea>

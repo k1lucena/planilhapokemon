@@ -1,4 +1,4 @@
-import { Student, TYPE_COLORS, TYPE_LABELS, calculateGrades, getGradeColor } from '@/lib/types';
+import { Student, TYPE_COLORS, TYPE_LABELS, getMediaFromNotas, getGradeColor } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Props {
@@ -22,9 +22,7 @@ export function Rankings({ students, onSelect }: Props) {
 
   return (
     <section className="mt-12">
-      <h2 className="text-center text-lg md:text-2xl font-bold text-foreground mb-1">
-        📊 Classificação
-      </h2>
+      <h2 className="text-center text-lg md:text-2xl font-bold text-foreground mb-1">📊 Classificação</h2>
       <p className="text-center text-muted-foreground text-sm mb-6">Rankings e notas dos alunos</p>
 
       <Tabs defaultValue="general" className="w-full">
@@ -38,7 +36,7 @@ export function Rankings({ students, onSelect }: Props) {
             {sorted.map((s, i) => {
               const typeClass = TYPE_COLORS[s.type] || 'type-normal';
               const typeLabel = TYPE_LABELS[s.type] || s.type;
-              const grades = calculateGrades(s.tasks);
+              const media = getMediaFromNotas(s.nota1, s.nota2, s.nota3);
               return (
                 <div
                   key={s.name}
@@ -55,11 +53,11 @@ export function Rankings({ students, onSelect }: Props) {
                     </span>
                   </div>
                   <div className="hidden sm:flex gap-3 text-xs">
-                    <span className={getGradeColor(grades.nota1)}>N1: {grades.nota1}</span>
-                    <span className={getGradeColor(grades.nota2)}>N2: {grades.nota2}</span>
-                    <span className={getGradeColor(grades.nota3)}>N3: {grades.nota3}</span>
+                    <span className={getGradeColor(s.nota1)}>N1: {s.nota1}</span>
+                    <span className={getGradeColor(s.nota2)}>N2: {s.nota2}</span>
+                    <span className={getGradeColor(s.nota3)}>N3: {s.nota3}</span>
                   </div>
-                  <span className="font-pixel text-sm text-primary ml-2">{s.totalScore}</span>
+                  <span className={`font-bold text-sm ml-2 ${getGradeColor(media)}`}>Média: {media}</span>
                 </div>
               );
             })}
@@ -74,12 +72,10 @@ export function Rankings({ students, onSelect }: Props) {
               const list = byType.get(type)!;
               return (
                 <div key={type} className="glass-card rounded-xl overflow-hidden">
-                  <div className={`${typeClass} px-4 py-2 text-center font-bold text-sm`}>
-                    {typeLabel}
-                  </div>
+                  <div className={`${typeClass} px-4 py-2 text-center font-bold text-sm`}>{typeLabel}</div>
                   <div className="p-2 space-y-1">
                     {list.map((s, i) => {
-                      const grades = calculateGrades(s.tasks);
+                      const media = getMediaFromNotas(s.nota1, s.nota2, s.nota3);
                       return (
                         <div
                           key={s.name}
@@ -87,13 +83,9 @@ export function Rankings({ students, onSelect }: Props) {
                           onClick={() => onSelect(s)}
                         >
                           <span className="text-sm">
-                            <span className="font-bold mr-2">{i + 1}.</span>
-                            {s.name}
+                            <span className="font-bold mr-2">{i + 1}.</span>{s.name}
                           </span>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs ${getGradeColor(grades.media)}`}>Média: {grades.media}</span>
-                            <span className="font-pixel text-xs text-primary">{s.totalScore}</span>
-                          </div>
+                          <span className={`text-xs font-bold ${getGradeColor(media)}`}>Média: {media}</span>
                         </div>
                       );
                     })}

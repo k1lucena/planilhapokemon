@@ -1,4 +1,4 @@
-import { Student, PokemonData, getEvolutionStage, TYPE_COLORS, TYPE_LABELS, calculateGrades, getGradeColor } from '@/lib/types';
+import { Student, PokemonData, getEvolutionStage, TYPE_COLORS, TYPE_LABELS, getMediaFromNotas, getGradeColor } from '@/lib/types';
 
 interface Props {
   students: Student[];
@@ -36,9 +36,7 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
 
   return (
     <section className="mb-12">
-      <h2 className="text-center text-lg md:text-2xl font-bold text-foreground mb-1">
-        🏆 Top 3
-      </h2>
+      <h2 className="text-center text-lg md:text-2xl font-bold text-foreground mb-1">🏆 Top 3</h2>
       <p className="text-center text-muted-foreground text-sm mb-8">Os melhores do momento</p>
 
       <div className="flex items-end justify-center gap-4 md:gap-8">
@@ -49,7 +47,7 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
           const typeClass = TYPE_COLORS[student.type] || 'type-normal';
           const glowClass = GLOW_CLASSES[student.type] || '';
           const typeLabel = TYPE_LABELS[student.type] || student.type;
-          const grades = calculateGrades(student.tasks);
+          const media = getMediaFromNotas(student.nota1, student.nota2, student.nota3);
 
           return (
             <div
@@ -59,9 +57,7 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
               onClick={() => onSelect(student)}
             >
               <div className={`relative mb-3 ${pos === 1 ? 'animate-float' : ''}`}>
-                {pos === 1 && (
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-3xl">👑</div>
-                )}
+                {pos === 1 && <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-3xl">👑</div>}
                 <div className={`rounded-full p-2 border-2 ${glowClass} bg-card/50`}>
                   {(animatedSprite || staticSprite) ? (
                     <img
@@ -83,12 +79,12 @@ export function Podium({ students, pokemonMap, onSelect }: Props) {
                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold mt-1 ${typeClass}`}>
                   {typeLabel}
                 </span>
-                <p className="font-pixel text-xs mt-1 text-primary">{student.totalScore} pts</p>
                 <div className="flex gap-2 mt-1 justify-center text-xs">
-                  <span className={getGradeColor(grades.nota1)}>N1:{grades.nota1}</span>
-                  <span className={getGradeColor(grades.nota2)}>N2:{grades.nota2}</span>
-                  <span className={getGradeColor(grades.nota3)}>N3:{grades.nota3}</span>
+                  <span className={getGradeColor(student.nota1)}>N1:{student.nota1}</span>
+                  <span className={getGradeColor(student.nota2)}>N2:{student.nota2}</span>
+                  <span className={getGradeColor(student.nota3)}>N3:{student.nota3}</span>
                 </div>
+                <p className={`text-xs font-bold mt-0.5 ${getGradeColor(media)}`}>Média: {media}</p>
               </div>
 
               <div className={`${heights[pos]} w-24 md:w-32 rounded-t-xl glass-card flex items-center justify-center relative overflow-hidden border-t-2 ${glowClass}`}>
