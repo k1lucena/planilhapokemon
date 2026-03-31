@@ -19,12 +19,52 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch(url);
+    // Validate it's a Google Sheets URL
+    if (!url.includes('docs.google.com/spreadsheets')) {
+      return new Response(JSON.stringify({ error: 'URL deve ser de uma planilha do Google Sheets' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Fetching URL:', url);
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'text/csv, text/plain, */*',
+      },
+    });
+
+    if (response.status === 404) {
+      return new Response(JSON.stringify({ 
+        error: 'Planilha não encontrada (404). Verifique se ela está "Publicada na Web" (Arquivo → Compartilhar → Publicar na Web).' 
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (response.status === 403 || response.status === 401) {
+      return new Response(JSON.stringify({ 
+        error: 'Acesso negado. A planilha precisa estar "Publicada na Web" (não apenas compartilhada por link).' 
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch sheet: ${response.status}`);
+      return new Response(JSON.stringify({ 
+        error: `Google retornou status ${response.status}. Verifique a URL e se a planilha está publicada.` 
+      }), {
+        status: response.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const text = await response.text();
+    console.log('Fetched', text.length, 'chars');
+
     return new Response(text, {
       headers: { ...corsHeaders, 'Content-Type': 'text/plain; charset=utf-8' },
     });

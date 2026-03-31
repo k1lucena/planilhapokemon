@@ -5,9 +5,39 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
-function extractSheetId(url: string): string | null {
-  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  return match ? match[1] : null;
+/**
+ * Normaliza qualquer URL do Google Sheets para uma URL de exportação CSV.
+ * Suporta:
+ *  - link de edição: /spreadsheets/d/<id>/edit
+ *  - link publicado: /spreadsheets/d/e/<pub-id>/pubhtml ou /pub?output=csv
+ *  - link de exportação: /spreadsheets/d/<id>/export?format=csv
+ *  - link direto já em CSV
+ */
+function buildSheetCsvUrl(url: string): string | null {
+  const trimmed = url.trim();
+
+  // Already a CSV export URL — use as-is
+  if (/\/pub\?.*output=csv/i.test(trimmed) || /\/export\?.*format=csv/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Published link: /spreadsheets/d/e/<pub-id>/pub...
+  const pubMatch = trimmed.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9_-]+)/);
+  if (pubMatch) {
+    const gidMatch = trimmed.match(/gid=(\d+)/);
+    const gid = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/e/${pubMatch[1]}/pub?output=csv${gid}`;
+  }
+
+  // Normal link: /spreadsheets/d/<id>/...
+  const normalMatch = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (normalMatch) {
+    const gidMatch = trimmed.match(/gid=(\d+)/);
+    const gid = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/${normalMatch[1]}/pub?output=csv${gid}`;
+  }
+
+  return null;
 }
 
 function recalcTotal(student: Student): Student {
@@ -42,16 +72,14 @@ function parseSheetData(text: string): Student[] {
     if (nameIdx === -1) return [];
 
     const taskIndices: number[] = [];
-    const skipCheckFns = [(h: string) => h.includes('total'), (h: string) => h.includes('soma'), (h: string) => h.includes('nota'), (h: string) => h.includes('matricula')];
     const skipIndices = new Set([nameIdx, pokemonIdx, typeIdx].filter(i => i >= 0));
     for (let i = 0; i < headers.length; i++) {
-      if (skipCheckFns.some(fn => fn(headers[i]))) skipIndices.add(i);
+      if (isSkipColumn(headers[i])) skipIndices.add(i);
     }
 
-    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
     for (let i = 0; i < headers.length; i++) {
       if (skipIndices.has(i)) continue;
-      if (headers[i] && (taskKeywords.some(k => headers[i].includes(k)) || /^\d+$/.test(headers[i]))) {
+      if (headers[i] && isTaskColumn(headers[i])) {
         taskIndices.push(i);
       }
     }
@@ -79,9 +107,40 @@ function parseSheetData(text: string): Student[] {
   }
 }
 
+/**
+ * Detecta a linha de cabeçalho real em texto CSV bruto.
+ * Procura a primeira linha que contenha "nome" (case-insensitive).
+ * Retorna o texto a partir dessa linha.
+ */
+function findHeaderAndSlice(text: string): string {
+  const lines = text.split(/\r?\n/);
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    if (/nome/i.test(lines[i])) {
+      console.log(`[CSV] Cabeçalho detectado na linha ${i + 1}`);
+      return lines.slice(i).join('\n');
+    }
+  }
+  // fallback: return original
+  return text;
+}
+
+const SKIP_PATTERNS = ['total', 'soma', 'nota', 'matricula', 'evoluc', 'evoluç'];
+const TASK_KEYWORDS = ['tarefa', 'task', 'atividade', 'projeto'];
+
+function isSkipColumn(name: string): boolean {
+  const l = name.toLowerCase().trim();
+  return SKIP_PATTERNS.some(p => l.includes(p));
+}
+
+function isTaskColumn(name: string): boolean {
+  const l = name.toLowerCase().trim();
+  return TASK_KEYWORDS.some(k => l.includes(k));
+}
+
 function parseCsvData(text: string): Student[] {
   try {
-    const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+    const cleanText = findHeaderAndSlice(text);
+    const result = Papa.parse(cleanText, { header: true, skipEmptyLines: true });
     if (!result.data || result.data.length === 0) return [];
     
     console.log('[CSV] Colunas detectadas:', result.meta.fields);
@@ -101,38 +160,40 @@ function parseCsvData(text: string): Student[] {
 
     if (!nameKey) {
       console.error('[CSV] Coluna de nome não encontrada. Colunas:', result.meta.fields);
+      toast.error('Coluna "NOME" não encontrada no CSV. Verifique o formato.');
       return [];
     }
 
     const skipKeys = new Set([nameKey, pokemonKey, typeKey].filter(Boolean) as string[]);
-    const skipPatterns = ['total', 'soma', 'nota', 'matricula'];
     for (const f of (result.meta.fields || [])) {
-      const l = f.toLowerCase().trim();
-      if (skipPatterns.some(p => l.includes(p))) skipKeys.add(f);
+      if (isSkipColumn(f)) skipKeys.add(f);
     }
 
-    const taskKeywords = ['tarefa', 'task', 'atividade', 'projeto'];
+    // First try explicit task keywords
     let taskKeys = (result.meta.fields || []).filter(f => {
       if (skipKeys.has(f)) return false;
-      const l = f.toLowerCase().trim();
-      return taskKeywords.some(k => l.includes(k));
+      return isTaskColumn(f);
     });
+    // Fallback: use remaining non-skip numeric-looking columns
     if (taskKeys.length === 0) {
-      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f));
+      taskKeys = (result.meta.fields || []).filter(f => !skipKeys.has(f) && f.trim() !== '');
     }
 
+    console.log('[CSV] Colunas de tarefa:', taskKeys);
+    console.log('[CSV] Colunas ignoradas:', [...skipKeys]);
+
     return (result.data as any[])
-      .filter(row => row[nameKey])
+      .filter(row => row[nameKey] && String(row[nameKey]).trim() !== '')
       .map(row => {
-        const tasks = taskKeys.map(k => ({
-          name: k,
+        const tasks = taskKeys.map((k, i) => ({
+          name: k.trim() || `Atividade ${String(i + 1).padStart(2, '0')}`,
           score: Number(row[k]) || 0,
         }));
         const pokemon = pokemonKey ? String(row[pokemonKey] || 'bulbasaur').toLowerCase().trim() : 'bulbasaur';
         const type = typeKey ? String(row[typeKey] || '').toLowerCase().trim() : inferPokemonType(pokemon);
         const totalScore = tasks.reduce((sum, t) => sum + t.score, 0);
         return {
-          name: String(row[nameKey]),
+          name: String(row[nameKey]).trim(),
           pokemon,
           type: type || inferPokemonType(pokemon),
           tasks,
@@ -349,14 +410,14 @@ export function useStudentData() {
   const importFromSheet = useCallback(async (sheetUrl: string) => {
     setIsLoading(true);
     try {
-      const sheetId = extractSheetId(sheetUrl);
-      if (!sheetId) {
-        toast.error('URL inválida. Cole o link da planilha do Google Sheets.');
+      const csvUrl = buildSheetCsvUrl(sheetUrl);
+      if (!csvUrl) {
+        toast.error('URL inválida. Cole o link da planilha do Google Sheets (publicada na web).');
         setIsLoading(false);
         return;
       }
 
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
+      console.log('[Sheets] URL normalizada:', csvUrl);
 
       const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', {
         body: { url: csvUrl },
@@ -365,10 +426,11 @@ export function useStudentData() {
       if (fnError) throw new Error(fnError.message || 'Erro na edge function');
 
       const text = typeof fnData === 'string' ? fnData : JSON.stringify(fnData);
+      console.log('[Sheets] Primeiras 500 chars:', text.substring(0, 500));
       const parsed = parseCsvData(text);
 
       if (parsed.length === 0) {
-        toast.error('Nenhum aluno encontrado. Verifique se a planilha está publicada na web e possui uma coluna "Nome".');
+        toast.error('Nenhum aluno encontrado. Verifique se a planilha está "Publicada na Web" (Arquivo → Compartilhar → Publicar na Web) e possui uma coluna "NOME".');
         setIsLoading(false);
         return;
       }
@@ -378,7 +440,7 @@ export function useStudentData() {
       toast.success(`${parsed.length} alunos importados do Google Sheets!`);
     } catch (e: any) {
       console.error('Falha ao importar do Sheets:', e);
-      toast.error(`Falha ao importar do Google Sheets: ${e.message || 'erro desconhecido'}`);
+      toast.error(`Falha ao importar: ${e.message || 'erro desconhecido'}. Verifique se a planilha está publicada na web.`);
     }
     setIsLoading(false);
   }, []);
