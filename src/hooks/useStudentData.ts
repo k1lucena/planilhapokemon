@@ -521,6 +521,7 @@ export function useStudentData() {
     importFromSheet,
     importFromCsv,
     importFromJson,
+    refreshFromSheet,
     resetToMock,
     evolutionEvent,
     clearEvolutionEvent,
