@@ -465,64 +465,9 @@ export function useStudentData() {
     }
   }, []);
 
-  const importFromSheet = useCallback(async (sheetUrl: string) => {
-    setIsLoading(true);
-    try {
-      const csvUrl = buildSheetCsvUrl(sheetUrl);
-      if (!csvUrl) {
-        toast.error('URL inválida.');
-        setIsLoading(false);
-        return;
-      }
-      localStorage.setItem(SHEET_URL_KEY, sheetUrl);
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('import-sheet', { body: { url: csvUrl } });
-      if (fnError) throw new Error(fnError.message);
-      const text = typeof fnData === 'string' ? fnData : JSON.stringify(fnData);
-      const parsed = parseCsvData(text);
-      if (parsed.length === 0) {
-        toast.error('Nenhum aluno encontrado. Verifique se a planilha está publicada na web e possui uma coluna "NOME".');
-        setIsLoading(false);
-        return;
-      }
-      await supabase.from('students').delete().neq('name', '');
-      await upsertStudents(parsed);
-      toast.success(`${parsed.length} alunos importados!`);
-    } catch (e: any) {
-      toast.error(`Falha ao importar: ${e.message || 'erro desconhecido'}`);
-    }
-    setIsLoading(false);
-  }, []);
-
   const refreshFromSheet = useCallback(async () => {
-    const savedUrl = localStorage.getItem(SHEET_URL_KEY) || DEFAULT_SHEET_URL;
-    await importFromSheet(savedUrl);
-  }, [importFromSheet]);
-
-  const importFromCsv = useCallback(async (file: File) => {
-    setIsLoading(true);
-    try {
-      const text = await file.text();
-      const parsed = parseCsvData(text);
-      if (parsed.length === 0) { toast.error('CSV não reconhecido.'); setIsLoading(false); return; }
-      await supabase.from('students').delete().neq('name', '');
-      await upsertStudents(parsed);
-      toast.success(`${parsed.length} alunos importados!`);
-    } catch (e: any) { toast.error(`Falha: ${e.message}`); }
-    setIsLoading(false);
-  }, []);
-
-  const importFromJson = useCallback(async (file: File) => {
-    setIsLoading(true);
-    try {
-      const text = await file.text();
-      const parsed = parseJsonData(text);
-      if (parsed.length === 0) { toast.error('JSON não reconhecido.'); setIsLoading(false); return; }
-      await supabase.from('students').delete().neq('name', '');
-      await upsertStudents(parsed);
-      toast.success(`${parsed.length} alunos importados!`);
-    } catch (e: any) { toast.error(`Falha: ${e.message}`); }
-    setIsLoading(false);
-  }, []);
+    await fetchStudents();
+  }, [fetchStudents]);
 
   const resetToMock = useCallback(async () => {
     setIsLoading(true);
