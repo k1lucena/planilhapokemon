@@ -87,7 +87,7 @@ export function AdminPanel({
 
         <Tabs defaultValue="grades" className="flex-1 flex flex-col min-h-0">
           <TabsList className="mx-4 mt-2 bg-muted/50">
-            <TabsTrigger value="grades" className="text-xs flex-1">📝 Notas</TabsTrigger>
+            <TabsTrigger value="grades" className="text-xs flex-1">📝 Atividades</TabsTrigger>
             <TabsTrigger value="students" className="text-xs flex-1">👥 Alunos</TabsTrigger>
             <TabsTrigger value="data" className="text-xs flex-1">📥 Dados</TabsTrigger>
           </TabsList>
