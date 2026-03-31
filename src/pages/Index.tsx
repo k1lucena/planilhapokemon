@@ -8,6 +8,7 @@ import { StudentCard } from '@/components/StudentCard';
 import { PokedexModal } from '@/components/PokedexModal';
 import { Rankings } from '@/components/Rankings';
 import { AdminPanel } from '@/components/AdminPanel';
+import { EvolutionAnimation } from '@/components/EvolutionAnimation';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 
@@ -16,7 +17,8 @@ const Index = () => {
     students, isLoading, lastUpdate,
     addStudent, removeStudent, updateStudent,
     addTask, removeTask, updateTaskScore,
-    importFromSheet, resetToMock,
+    importFromSheet, importFromCsv, importFromJson,
+    resetToMock, evolutionEvent, clearEvolutionEvent,
   } = useStudentData();
 
   const pokemonNames = useMemo(() => students.map(s => s.pokemon), [students]);
@@ -29,7 +31,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen game-bg">
-      {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-md py-5 px-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left">
@@ -42,12 +43,7 @@ const Index = () => {
             <span className="text-xs text-muted-foreground">
               {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAdminOpen(true)}
-              className="gap-1"
-            >
+            <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)} className="gap-1">
               <Settings className="h-3 w-3" />
               Gerenciar
             </Button>
@@ -56,9 +52,9 @@ const Index = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {pokemonLoading && students.length > 0 && (
+        {(isLoading || pokemonLoading) && students.length === 0 && (
           <div className="text-center py-4 text-muted-foreground text-sm animate-pulse">
-            Carregando sprites...
+            Carregando dados...
           </div>
         )}
 
@@ -108,9 +104,15 @@ const Index = () => {
         onRemoveTask={removeTask}
         onUpdateScore={updateTaskScore}
         onImportSheet={importFromSheet}
+        onImportCsv={importFromCsv}
+        onImportJson={importFromJson}
         onReset={resetToMock}
         isLoading={isLoading}
       />
+
+      {evolutionEvent && (
+        <EvolutionAnimation event={evolutionEvent} onComplete={clearEvolutionEvent} />
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Student } from '@/lib/types';
 import { StudentForm } from './StudentForm';
 import { TaskManager } from './TaskManager';
@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Pencil, UserPlus, Download, RotateCcw } from 'lucide-react';
+import { Trash2, Pencil, UserPlus, Download, RotateCcw, FileSpreadsheet, FileJson, FileText } from 'lucide-react';
 
 interface AdminPanelProps {
   open: boolean;
@@ -19,6 +19,8 @@ interface AdminPanelProps {
   onRemoveTask: (taskName: string) => void;
   onUpdateScore: (studentName: string, taskName: string, score: number) => void;
   onImportSheet: () => void;
+  onImportCsv: (file: File) => void;
+  onImportJson: (file: File) => void;
   onReset: () => void;
   isLoading: boolean;
 }
@@ -27,10 +29,12 @@ export function AdminPanel({
   open, onClose, students,
   onAddStudent, onRemoveStudent, onUpdateStudent,
   onAddTask, onRemoveTask, onUpdateScore,
-  onImportSheet, onReset, isLoading,
+  onImportSheet, onImportCsv, onImportJson, onReset, isLoading,
 }: AdminPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
+  const jsonInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = (data: { name: string; pokemon: string; type: string }) => {
     onAddStudent(data);
@@ -41,6 +45,14 @@ export function AdminPanel({
     if (editingStudent) {
       onUpdateStudent(editingStudent.name, data);
       setEditingStudent(null);
+    }
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>, handler: (file: File) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handler(file);
+      e.target.value = '';
     }
   };
 
@@ -80,18 +92,10 @@ export function AdminPanel({
                           <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                           <p className="text-xs text-muted-foreground capitalize">{s.pokemon} · {s.type} · {s.totalScore}pts</p>
                         </div>
-                        <Button
-                          variant="ghost" size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => setEditingStudent(s)}
-                        >
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingStudent(s)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button
-                          variant="ghost" size="sm"
-                          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                          onClick={() => onRemoveStudent(s.name)}
-                        >
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => onRemoveStudent(s.name)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -103,32 +107,43 @@ export function AdminPanel({
 
             {/* TASKS TAB */}
             <TabsContent value="tasks" className="p-4 mt-0">
-              <TaskManager
-                students={students}
-                onAddTask={onAddTask}
-                onRemoveTask={onRemoveTask}
-                onUpdateScore={onUpdateScore}
-              />
+              <TaskManager students={students} onAddTask={onAddTask} onRemoveTask={onRemoveTask} onUpdateScore={onUpdateScore} />
             </TabsContent>
 
             {/* DATA TAB */}
-            <TabsContent value="data" className="p-4 space-y-3 mt-0">
+            <TabsContent value="data" className="p-4 space-y-4 mt-0">
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Importar dados do Google Sheets (substitui os dados atuais).</p>
+                <p className="text-sm font-medium text-foreground">Importar dados</p>
+                <p className="text-xs text-muted-foreground">Substitui todos os dados atuais pela fonte importada.</p>
+                
                 <Button onClick={onImportSheet} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
-                  <Download className="h-4 w-4" />
-                  {isLoading ? 'Importando...' : 'Importar do Sheets'}
+                  <FileSpreadsheet className="h-4 w-4" />
+                  {isLoading ? 'Importando...' : 'Google Sheets'}
                 </Button>
+
+                <Button onClick={() => csvInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
+                  <FileText className="h-4 w-4" />
+                  Importar CSV
+                </Button>
+                <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={e => handleFileImport(e, onImportCsv)} />
+
+                <Button onClick={() => jsonInputRef.current?.click()} disabled={isLoading} variant="outline" className="w-full gap-2" size="sm">
+                  <FileJson className="h-4 w-4" />
+                  Importar JSON
+                </Button>
+                <input ref={jsonInputRef} type="file" accept=".json" className="hidden" onChange={e => handleFileImport(e, onImportJson)} />
               </div>
+
               <div className="space-y-2 pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">Restaurar dados de demonstração (substitui tudo).</p>
                 <Button onClick={onReset} variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" size="sm">
                   <RotateCcw className="h-4 w-4" /> Resetar para Demo
                 </Button>
               </div>
+
               <div className="pt-4 border-t border-border">
                 <p className="text-xs text-muted-foreground">
-                  {students.length} alunos · {students[0]?.tasks.length || 0} tarefas · Dados salvos localmente
+                  {students.length} alunos · {students[0]?.tasks.length || 0} tarefas · Dados salvos no banco
                 </p>
               </div>
             </TabsContent>
