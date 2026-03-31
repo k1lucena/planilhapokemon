@@ -101,10 +101,11 @@ const Index = () => {
         onImportCsv={importFromCsv}
         onImportJson={importFromJson}
         onReset={resetToMock}
+        onEvolveStudent={evolveStudent}
         isLoading={isLoading}
       />
 
-      {evolutionEvent && <EvolutionAnimation event={evolutionEvent} onComplete={clearEvolutionEvent} />}
+      {evolutionQueue.length > 0 && <EvolutionAnimation event={evolutionQueue[0]} onComplete={shiftEvolutionQueue} />}
     </div>
   );
 };

@@ -33,7 +33,7 @@ export function AdminPanel({
   open, onClose, students,
   onAddStudent, onRemoveStudent, onUpdateStudent,
   onAddTask, onRemoveTask, onUpdateScore,
-  onImportSheet, onImportCsv, onImportJson, onReset, isLoading,
+  onImportSheet, onImportCsv, onImportJson, onReset, onEvolveStudent, isLoading,
 }: AdminPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
