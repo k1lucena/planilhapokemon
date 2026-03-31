@@ -25,9 +25,14 @@ function recalcTotal(student: Student): Student {
   return { ...student, totalScore: student.tasks.reduce((sum, t) => sum + t.score, 0) };
 }
 
+const POKEMON_TYPE_MAP: Record<string, string> = {
+  bulbasaur: 'grass', ivysaur: 'grass', venusaur: 'grass',
+  charmander: 'fire', charmeleon: 'fire', charizard: 'fire',
+  squirtle: 'water', wartortle: 'water', blastoise: 'water',
+};
+
 function inferPokemonType(pokemon: string): string {
-  const starter = STARTER_POKEMON.find(s => s.name.toLowerCase() === pokemon.toLowerCase());
-  return starter?.type || 'normal';
+  return POKEMON_TYPE_MAP[pokemon.toLowerCase().trim()] || 'fire';
 }
 
 function normalizeHeader(name: string): string {
